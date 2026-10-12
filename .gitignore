@@ -1,0 +1,12 @@
+node_modules/
+data/
+*.sqlite*
+*.qcow2
+*.pem
+__pycache__/
+config.local.json
+third_party/
+build/
+dist/
+.toolchains/
+vm/

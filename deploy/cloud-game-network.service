@@ -1,0 +1,11 @@
+[Unit]
+Description=Cloud Game private VM bridge
+Before=cloud-game.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /opt/cloud-game/deploy/network_setup.py
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+[Unit]
+Description=Cloud Game HOST
+After=network-online.target libvirtd.service tailscaled.service cloud-game-network.service var-lib-cloudgame-volatile.mount
+Wants=network-online.target tailscaled.service cloud-game-watchdog.timer
+Requires=cloud-game-network.service var-lib-cloudgame-volatile.mount
+
+[Service]
+Type=simple
+User=cloud-game
+Group=cloud-game
+Environment=CG_DATA=/var/lib/cloudgame/control
+EnvironmentFile=/etc/cloud-game/host.env
+ExecStart=/usr/bin/node /opt/cloud-game/host/server.mjs
+Restart=on-failure
+RestartSec=5
+UMask=0077
+PrivateTmp=true
+# sudo is restricted to the immutable fixed-operation helper; NoNewPrivileges
+# cannot be enabled without replacing sudo with a privileged IPC broker.
+
+[Install]
+WantedBy=multi-user.target

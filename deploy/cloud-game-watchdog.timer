@@ -1,0 +1,11 @@
+[Unit]
+Description=Verify Cloud Game session deadline and HOST process
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30
+AccuracySec=5
+Unit=cloud-game-watchdog.service
+
+[Install]
+WantedBy=timers.target

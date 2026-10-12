@@ -1,0 +1,31 @@
+name: Verify and package HOST
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm test
+      - run: npm run check
+      - run: python3 tools/package.py
+      - run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - run: python3 dist/cloud-game.pyz verify
+      - run: python3 tools/release.py --base-url https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads
+      - run: sh -n dist/install.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-game-host-evaluation
+          path: dist/

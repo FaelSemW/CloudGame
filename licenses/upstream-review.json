@@ -1,0 +1,22 @@
+[
+  {
+    "repository": "https://github.com/LizardByte/Sunshine",
+    "reviewedCommit": "d1fc311f6b65634b226e51549f9102a2bfb7764b",
+    "submodules": "[submodule \"packaging/linux/flatpak/deps/flatpak-builder-tools\"]\n\tpath = packaging/linux/flatpak/deps/flatpak-builder-tools\n\turl = https://github.com/flatpak/flatpak-builder-tools.git\n\tbranch = master\n[submodule \"third-party/build-deps\"]\n\tpath = third-party/build-deps\n\turl = https://github.com/LizardByte/build-deps.git\n\tbranch = master\n[submodule \"third-party/dockle\"]\n\tpath = third-party/dockle\n\turl = https://github.com/LizardByte/dockle.git\n\tbranch = master\n[submodule \"third-party/glad\"]\n\tpath = third-party/glad\n\turl = https://github.com/Dav1dde/glad.git\n[submodule \"third-party/libdisplaydevice\"]\n\tpath = third-party/libdisplaydevice\n\turl = https://github.com/LizardByte/libdisplaydevice.git\n\tbranch = master\n[submodule \"third-party/libvirtualhid\"]\n\tpath = third-party/libvirtualhid\n\turl = https://github.com/LizardByte/libvirtualhid.git\n\tbranch = master\n[submodule \"third-party/lizardbyte-common\"]\n\tpath = third-party/lizardbyte-common\n\turl = https://github.com/LizardByte/lizardbyte-common.git\n\tbranch = master\n[submodule \"third-party/moonlight-common-c\"]\n\tpath = third-party/moonlight-common-c\n\turl = https://github.com/moonlight-stream/moonlight-common-c.git\n\tbranch = master\n[submodule \"third-party/nvapi\"]\n\tpath = third-party/nvapi\n\turl = https://github.com/NVIDIA/nvapi.git\n\tbranch = main\n[submodule \"third-party/plasma-wayland-protocols\"]\n\tpath = third-party/plasma-wayland-protocols\n\turl = https://github.com/KDE/plasma-wayland-protocols.git\n\tbranch = master\n[submodule \"third-party/Simple-Web-Server\"]\n\tpath = third-party/Simple-Web-Server\n\turl = https://github.com/LizardByte-infrastructure/Simple-Web-Server.git\n\tbranch = master\n[submodule \"third-party/TPCircularBuffer\"]\n\tpath = third-party/TPCircularBuffer\n\turl = https://github.com/michaeltyson/TPCircularBuffer.git\n\tbranch = master\n[submodule \"third-party/tray\"]\n\tpath = third-party/tray\n\turl = https://github.com/LizardByte/tray.git\n\tbranch = master\n[submodule \"third-party/ViGEmClient\"]\n\tpath = third-party/ViGEmClient\n\turl = https://github.com/LizardByte/Virtual-Gamepad-Emulation-Client.git\n\tbranch = master\n[submodule \"third-party/wayland-protocols\"]\n\tpath = third-party/wayland-protocols\n\turl = https://github.com/LizardByte-infrastructure/wayland-protocols.git\n\tbranch = main\n[submodule \"third-party/wlr-protocols\"]\n\tpath = third-party/wlr-protocols\n\turl = https://github.com/LizardByte-infrastructure/wlr-protocols.git\n\tbranch = master\n"
+  },
+  {
+    "repository": "https://github.com/moonlight-stream/moonlight-qt",
+    "reviewedCommit": "a57e947d7185fd01384f6973df4df59ae2968d01",
+    "submodules": "[submodule \"moonlight-common-c/moonlight-common-c\"]\n\tpath = moonlight-common-c/moonlight-common-c\n\turl = https://github.com/moonlight-stream/moonlight-common-c.git\n[submodule \"qmdnsengine/qmdnsengine\"]\n\tpath = qmdnsengine/qmdnsengine\n\turl = https://github.com/cgutman/qmdnsengine.git\n[submodule \"app/SDL_GameControllerDB\"]\n\tpath = app/SDL_GameControllerDB\n\turl = https://github.com/gabomdq/SDL_GameControllerDB.git\n"
+  },
+  {
+    "repository": "https://github.com/moonlight-stream/moonlight-android",
+    "reviewedCommit": "b48494cb96bff23d8886c4775cc4f39a1075495d",
+    "submodules": "[submodule \"app/src/main/jni/moonlight-core/moonlight-common-c\"]\n\tpath = app/src/main/jni/moonlight-core/moonlight-common-c\n\turl = https://github.com/moonlight-stream/moonlight-common-c.git\n"
+  },
+  {
+    "repository": "https://github.com/moonlight-stream/moonlight-common-c",
+    "reviewedCommit": "f900dd4767759c7b9d0e93bcea666b55c69ea62f",
+    "submodules": "[submodule \"enet\"]\n\tpath = enet\n\turl = https://github.com/cgutman/enet.git\n[submodule \"nanors\"]\n\tpath = nanors\n\turl = https://github.com/sleepybishop/nanors.git\n"
+  }
+]

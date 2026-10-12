@@ -1,0 +1,7 @@
+[Unit]
+Description=Cloud Game independent cleanup watchdog
+After=cloud-game-network.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'printf %%s \'{"op":"watchdog"}\' | /usr/bin/python3 /opt/cloud-game/deploy/vm_helper.py'

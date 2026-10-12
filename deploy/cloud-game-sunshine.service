@@ -1,0 +1,19 @@
+[Unit]
+Description=Cloud Game Sunshine (guest only)
+After=display-manager.service network-online.target
+Wants=network-online.target
+
+[Service]
+User=player
+Group=player
+Environment=HOME=/home/player
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/player/.Xauthority
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStart=/usr/bin/sunshine /home/player/.config/sunshine/sunshine.conf
+Restart=on-failure
+RestartSec=3
+UMask=0077
+
+[Install]
+WantedBy=graphical.target

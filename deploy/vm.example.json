@@ -1,0 +1,6 @@
+{
+  "templateReviewed": false,
+  "memoryMiB": 8192,
+  "cpus": 4,
+  "gpuDevices": ["0000:01:00.0", "0000:01:00.1"]
+}

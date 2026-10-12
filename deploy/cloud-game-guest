@@ -1,0 +1,62 @@
+#!/usr/bin/python3
+"""Installed only in the guest. Called by root through QEMU Guest Agent."""
+import base64
+import json
+import pathlib
+import re
+import ssl
+import subprocess
+import sys
+import urllib.request
+
+
+def api(path, body=None):
+    credentials = json.loads(pathlib.Path('/etc/cloud-game/sunshine-api.json').read_text())
+    auth = base64.b64encode((credentials['username'] + ':' + credentials['password']).encode()).decode()
+    context = ssl.create_default_context(cafile='/home/player/.config/sunshine/credentials/cacert.pem')
+    context.check_hostname = False  # Certificate is pinned to this guest's local Sunshine certificate.
+    request = urllib.request.Request('https://127.0.0.1:47990' + path,
+        data=None if body is None else json.dumps(body).encode(),
+        headers={'Authorization': 'Basic ' + auth, 'Content-Type': 'application/json'})
+    with urllib.request.urlopen(request, context=context, timeout=3) as response:
+        return json.load(response)
+
+
+def main():
+    if sys.argv[1:] == ['pair']:
+        pin = sys.stdin.read(5)
+        if not re.fullmatch(r'\d{4}', pin):
+            raise ValueError('PIN inválido')
+        return api('/api/pin', {'pin': pin, 'name': 'Cloud Game Player'})
+    if sys.argv[1:] != ['status']:
+        raise ValueError('Operação inválida')
+    # A process listening on a port is not proof of streaming. Read upstream's
+    # connection markers from the current service invocation, not previous boots.
+    invocation = subprocess.check_output(['systemctl', 'show', '-p', 'InvocationID', '--value', 'cloud-game-sunshine.service'], text=True).strip()
+    if not re.fullmatch(r'[0-9a-f]{32}', invocation):
+        return {'ready': False, 'connected': False}
+    apps = api('/api/apps')
+    if not any(app.get('name') == 'Desktop' for app in apps.get('apps', [])):
+        return {'ready': False, 'connected': False}
+    journal = subprocess.run(['journalctl', '--no-pager', '-o', 'cat', '--grep=CLIENT (CONNECTED|DISCONNECTED)', '_SYSTEMD_INVOCATION_ID=' + invocation], text=True, capture_output=True)
+    # journalctl returns 1 when the filter has no matches (normal before pairing).
+    if journal.returncode not in (0, 1) or (journal.returncode == 1 and journal.stderr.strip()):
+        raise RuntimeError('Não foi possível ler o journal do Sunshine.')
+    lines = journal.stdout
+    connected = 0
+    for line in lines.splitlines():
+        if 'CLIENT CONNECTED' in line:
+            connected += 1
+        elif 'CLIENT DISCONNECTED' in line:
+            connected = max(0, connected - 1)
+    if connected > 1:
+        raise RuntimeError('Mais de uma conexão de streaming detectada; sessão deve ser encerrada.')
+    return {'ready': True, 'connected': connected == 1}
+
+
+if __name__ == '__main__':
+    try:
+        print(json.dumps(main()))
+    except Exception:
+        print('Falha ao verificar Sunshine. Consulte o journal da VM.', file=sys.stderr)
+        sys.exit(1)
