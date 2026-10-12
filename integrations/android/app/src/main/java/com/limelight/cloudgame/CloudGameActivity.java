@@ -36,7 +36,7 @@ public final class CloudGameActivity extends Activity {
     private volatile boolean destroyed;
     private boolean authenticated, busy, polling, resumed;
     private JSONObject status = new JSONObject();
-    private TextView state, message;
+    private TextView state, message, notice;
     private EditText host, user, password;
     private LinearLayout login, actions;
     private Button enter, reserve, play, stop, logout;
@@ -79,6 +79,7 @@ public final class CloudGameActivity extends Activity {
                 new AlertDialog.Builder(this).setTitle("Cloud Game / Moonlight").setView(view).setPositiveButton("Fechar", null).show();
             } catch (IOException e) { message.setText("Não foi possível ler os avisos de licença."); }
         });
+        notice = text(root, "", 16);
         message = text(root, "", 16);
         text(root, "Entre na Steam somente dentro do desktop remoto. Encerrar descarta dados locais; saves na nuvem permanecem na sua conta.", 15);
         text(root, "Streaming integrado: Moonlight Android e moonlight-common-c · GPLv3. Licenças em configurações do streaming e no código-fonte do CloudGame.", 13);
@@ -173,6 +174,8 @@ public final class CloudGameActivity extends Activity {
             default: label="Sem confirmação do HOST";
         }
         state.setText(authenticated ? label : "Entre para consultar seu HOST");
+        notice.setText(status.isNull("notice") ? "" : status.optString("notice", ""));
+        notice.setVisibility(authenticated && notice.length() > 0 ? View.VISIBLE : View.GONE);
         enter.setEnabled(!busy); logout.setEnabled(!busy);
         reserve.setEnabled(!busy && current.equals("available"));
         play.setEnabled(!busy && own && (current.equals("ready") || current.equals("streaming") || current.equals("reconnecting")));

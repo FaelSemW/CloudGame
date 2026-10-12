@@ -4,6 +4,8 @@ These do NOT claim to validate KVM, nftables or Bazzite.
 import importlib.util
 from importlib.machinery import SourceFileLoader
 import json
+import shutil
+import subprocess
 import io
 import pathlib
 import sys
@@ -30,11 +32,23 @@ guest_spec.loader.exec_module(guest_adapter)
 class PolicyTests(unittest.TestCase):
     def test_software_vm_has_no_passthrough_or_public_display_listener(self):
         config = {'profile': 'software', 'memoryMiB': 2048, 'cpus': 2, 'gpuDevices': []}
-        xml = ET.fromstring(helper.domain_xml(config, SID))
+        with patch.object(helper.pwd, 'getpwnam', return_value=types.SimpleNamespace(pw_uid=107, pw_gid=107)):
+            xml = ET.fromstring(helper.domain_xml(config, SID))
         self.assertIsNone(xml.find('devices/hostdev'))
         self.assertIsNone(xml.find('devices/filesystem'))
         self.assertEqual(xml.find('devices/graphics/listen').attrib, {'type': 'none'})
         self.assertEqual(xml.find('devices/video/model').get('type'), 'vga')
+
+    @unittest.skipUnless(shutil.which('virt-xml-validate'), 'libvirt schema validator requires Linux')
+    def test_domain_against_installed_libvirt_schema(self):
+        for profile, devices in [('software', []), ('vfio', ['0000:01:00.0'])]:
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as directory:
+                with patch.object(helper.pwd, 'getpwnam', return_value=types.SimpleNamespace(pw_uid=107, pw_gid=107)):
+                    xml = helper.domain_xml({'profile': profile, 'memoryMiB': 8192, 'cpus': 2, 'gpuDevices': devices}, SID)
+                path = pathlib.Path(directory) / 'domain.xml'
+                path.write_text(xml)
+                result = subprocess.run(['virt-xml-validate', str(path), 'domain'], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_swap_allows_only_zram_without_writeback(self):
         for device, backing, allowed in [('/dev/zram0', 'none', True), ('/dev/zram0', '/dev/sda', False), ('/swapfile', 'none', False)]:

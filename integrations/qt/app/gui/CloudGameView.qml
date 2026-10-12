@@ -40,6 +40,7 @@ Item {
                 Button { text: "Encerrar e descartar ambiente"; enabled: !CloudGame.busy && CloudGame.status.own && ["preparing","cleaning"].indexOf(CloudGame.status.state) < 0; onClicked: finishDialog.open() }
                 Button { text: "Sair da conta"; enabled: !CloudGame.busy; onClicked: CloudGame.logout() }
             }
+            Label { text: CloudGame.status.notice || ""; visible: CloudGame.authenticated && text.length > 0; color: "#ffc7a6"; wrapMode: Text.Wrap; Layout.fillWidth: true }
             BusyIndicator { running: CloudGame.busy; visible: running }
             Button { text: "Vídeo, áudio e controles"; enabled: !CloudGame.busy; onClicked: { toolBar.visible = true; stackView.push("SettingsView.qml") } }
             Label { text: CloudGame.message; visible: text.length > 0; color: "#ffc7a6"; wrapMode: Text.Wrap; Layout.fillWidth: true }

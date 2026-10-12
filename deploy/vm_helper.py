@@ -232,6 +232,9 @@ def domain_xml(c, sid):
     ET.SubElement(interface, 'model', type='virtio')
     channel = ET.SubElement(dev, 'channel', type='unix')
     ET.SubElement(channel, 'target', type='virtio', name='org.qemu.guest_agent.0')
+    # Guest PulseAudio captures this card; never attach the owner's audio server.
+    ET.SubElement(ET.SubElement(dev, 'sound', model='ich9'), 'audio', id='1')
+    ET.SubElement(dev, 'audio', id='1', type='none')
     ET.SubElement(dev, 'video').append(ET.Element('model', type='vga' if software else 'none'))
     if software:
         # A virtual framebuffer without a network-accessible SPICE listener.

@@ -24,6 +24,7 @@ function render(state) {
   const label = states[state.state] ?? states.offline;
   $('state').textContent = !state.own && ['preparing','ready','streaming','reconnecting'].includes(state.state) ? 'Ocupado' : label[0];
   $('stateDescription').textContent = state.error || (!state.own && ['preparing','ready','streaming','reconnecting'].includes(state.state) ? 'Outro jogador está usando o PC. Aguarde a liberação do HOST.' : label[1]);
+  if (state.notice) $('stateDescription').textContent += ' ' + state.notice;
   $('start').hidden = state.own; $('start').disabled = state.state !== 'available';
   $('stop').hidden = !state.own; $('stop').disabled = ['preparing','cleaning','offline'].includes(state.state);
   $('connection').hidden = !state.own || !['ready','streaming','reconnecting'].includes(state.state);

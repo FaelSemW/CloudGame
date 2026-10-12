@@ -10,9 +10,17 @@ Use **Bazzite Portal → preparação de virtualização**, ou a receita `ujust 
 
 Separe uma GPU para o HOST e outra GPU, com sua função de áudio, para a VM. IOMMU deve estar habilitado no firmware; a GPU da VM deve estar ligada a `vfio-pci`. Todos os dispositivos do grupo IOMMU precisam ser GPU/áudio e estar listados na configuração. **ACS override, VFIO sem IOMMU e interrupções inseguras são recusados.** Uma GPU única compartilhada com o desktop do proprietário não é suportada. Pode ser necessário monitor físico ou adaptador HDMI na GPU da VM.
 
-Desative swap para esta configuração, inclusive zram, antes de iniciar sessões. O diagnóstico bloqueia qualquer swap ativo. O tamanho inicial do tmpfs é 8 GiB; a VM usa 8 GiB de RAM além desse teto. Reserve memória para o Bazzite; 24–32 GiB totais é um ponto de partida, não garantia para todos os jogos. Ajuste o teto do mount e a RAM da VM conforme a carga, e valide OOM. Hibernação e dumps de RAM devem estar desativados por política do administrador: o código não consegue provar que firmware ou ferramentas de diagnóstico nunca gravarão memória.
+Swap em disco e zram com writeback são bloqueados. Zram é aceito somente quando o kernel informa `backing_dev=none`, mantendo os dados na memória. O tamanho inicial do tmpfs é 8 GiB; a VM com GPU usa 8 GiB de RAM além desse teto. Reserve memória para o Bazzite; 24–32 GiB totais é um ponto de partida, não garantia para todos os jogos. Ajuste o teto do mount e a RAM da VM conforme a carga, e valide OOM. Hibernação e dumps de RAM devem estar desativados por política do administrador: o código não consegue provar que firmware ou ferramentas de diagnóstico nunca gravarão memória.
 
 ## 2. Preparar a imagem de jogos, uma vez
+
+O instalador agora cria automaticamente uma imagem limpa quando `/var/lib/cloudgame/base.qcow2` não existe. Baixa Ubuntu 24.04 e Sunshine oficial com SHA-256 fixados em `deploy/image-lock.json`, instala Xfce, áudio, Steam e o agente interno e configura o usuário sem privilégios. Depois inicia um overlay descartável para verificar a API real do Sunshine, grupos do jogador e ausência de compartilhamentos. Uma falha interrompe a instalação e preserva os registros. Essa verificação não comprova streaming, controle, desempenho ou GPU física.
+
+Reserve pelo menos 16 GiB livres para a preparação inicial. O disco virtual tem capacidade de 128 GiB e alocação sob demanda; jogos exigem espaço adicional. A imagem automática usa drivers Mesa; a instalação automática com GPU NVIDIA permanece recusada por falta do driver proprietário nessa imagem.
+
+Para testar dentro de uma VM sem GPU dedicada, selecione **Teste em VM / CPU** no instalador gráfico ou use `--software`. O jogador continua numa VM separada, sem pastas do proprietário. Renderização e codificação usam CPU; há perda expressiva de desempenho. KVM é usado quando disponível, com emulação QEMU como alternativa. Reserve pelo menos 8 GiB para o Bazzite de teste; isso não garante capacidade para jogos grandes.
+
+O procedimento manual abaixo serve para preparar uma biblioteca ou drivers específicos. Não é mais necessário criar a imagem básica manualmente:
 
 No virt-manager, crie uma VM Linux **limpa**, BIOS/q35, disco qcow2, desktop X11 (por exemplo, Xfce), QEMU Guest Agent e GPU dedicada. Esta VM é um componente interno do HOST, não um terceiro aplicativo do produto.
 
@@ -47,9 +55,9 @@ pkexec /usr/bin/python3 deploy/install_host.py
 
 O instalador copia o código para `/opt/cloud-game`, cria o usuário de serviço, unidades systemd, tmpfs e regra sudo para **um único helper fixo**. Baixa Node 22 LTS x86_64 de nodejs.org, confere SHA-256 contra o manifesto HTTPS oficial e preserva a licença e a procedência. Nada é instalado no `/usr` imutável. Instalações existentes são recusadas para preservar configuração/dados; falhas intermediárias exigem revisão administrativa, sem rollback destrutivo automático.
 
-Edite como administrador `/etc/cloud-game/vm.json`: BDFs reais da GPU/áudio, memória/CPUs e `templateReviewed: true` **somente depois de revisar a imagem conforme a seção anterior**. Esse campo não substitui os testes de segurança. O arquivo é root-only, não editável remotamente pelo cliente.
+O instalador escreve `/etc/cloud-game/vm.json` com o perfil escolhido, memória/CPUs e, no perfil físico, a única GPU compatível já dedicada ao VFIO. Nenhum driver do desktop do proprietário é desvinculado automaticamente. `templateReviewed: true` é gravado após a verificação automática da imagem; não substitui homologação de segurança ou streaming. O arquivo é root-only, não editável remotamente pelo cliente.
 
-Ative HTTPS privado:
+O instalador ativa HTTPS privado com o comando abaixo. Configuração Serve/Funnel preexistente é preservada e impede instalação automática para evitar sobrescrevê-la:
 
 ```sh
 sudo tailscale serve --bg http://127.0.0.1:8787
