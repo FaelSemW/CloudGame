@@ -237,7 +237,7 @@ def guest(sid, operation, pin=None):
     if pin is not None:
         arguments['input-data'] = base64.b64encode(pin.encode()).decode()
     pid = qga(sid, 'guest-exec', arguments)['pid']
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + (50 if operation == 'pair' else 10)
     while time.monotonic() < deadline:
         result = qga(sid, 'guest-exec-status', {'pid': pid})
         if result.get('exited'):

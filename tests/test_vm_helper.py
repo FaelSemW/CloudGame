@@ -4,6 +4,7 @@ These do NOT claim to validate KVM, nftables or Bazzite.
 import importlib.util
 from importlib.machinery import SourceFileLoader
 import json
+import io
 import pathlib
 import sys
 import tempfile
@@ -27,14 +28,26 @@ guest_spec.loader.exec_module(guest_adapter)
 
 
 class PolicyTests(unittest.TestCase):
+    def test_pairing_binds_pin_to_upstream_request_id(self):
+        responses = [{'pairings': []}, {'pairings': [{'id': 'b'*32}]}, {'status': True}]
+        with patch.object(sys, 'argv', ['cloud-game-guest', 'pair']), patch.object(sys, 'stdin', io.StringIO('1234')), patch.object(guest_adapter, 'api', side_effect=responses) as api, patch.object(guest_adapter.time, 'sleep'):
+            self.assertEqual(guest_adapter.main(), {'status': True})
+            self.assertEqual(api.call_args.args, ('/api/pin', {'pairing_id': 'b'*32, 'pin': '1234', 'name': 'Cloud Game Player'}))
+
+    def test_pairing_refuses_ambiguous_pending_clients(self):
+        with patch.object(sys, 'argv', ['cloud-game-guest', 'pair']), patch.object(sys, 'stdin', io.StringIO('1234')), patch.object(guest_adapter, 'api', return_value={'pairings': [{'id': 'b'*32}, {'id': 'c'*32}]}) as api:
+            with self.assertRaisesRegex(RuntimeError, 'Mais de um'):
+                guest_adapter.main()
+            self.assertEqual(api.call_count, 1)
+
     def test_sunshine_ready_before_first_connection_marker(self):
         journal = types.SimpleNamespace(returncode=1, stdout='', stderr='')
-        with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps':[{'name':'Desktop'}]}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
+        with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps':[{'name':'Desktop'}], 'pairings': []}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
             self.assertEqual(guest_adapter.main(), {'ready':True, 'connected':False})
 
     def test_sunshine_multiple_connection_markers_fail_closed(self):
         journal = types.SimpleNamespace(returncode=0, stdout='Info: CLIENT CONNECTED\nInfo: CLIENT CONNECTED', stderr='')
-        with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps':[{'name':'Desktop'}]}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
+        with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps':[{'name':'Desktop'}], 'pairings': []}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
             with self.assertRaises(RuntimeError):
                 guest_adapter.main()
 

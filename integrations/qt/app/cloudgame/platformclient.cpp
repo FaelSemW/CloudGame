@@ -9,6 +9,7 @@
 #include <QNetworkCookieJar>
 #include <QJsonDocument>
 #include <QRegularExpression>
+#include <memory>
 
 PlatformClient::PlatformClient(QObject* parent) : QObject(parent) {
     m_Network.setRedirectPolicy(QNetworkRequest::ManualRedirectPolicy);
@@ -16,13 +17,13 @@ PlatformClient::PlatformClient(QObject* parent) : QObject(parent) {
     connect(&m_Poll, &QTimer::timeout, this, &PlatformClient::refresh);
 }
 void PlatformClient::fail(QString message) { m_Message = message; m_Busy = false; emit changed(); }
-void PlatformClient::request(QString route, QJsonObject body, bool post, std::function<void(QJsonObject)> success) {
+void PlatformClient::request(QString route, QJsonObject body, bool post, std::function<void(QJsonObject)> success, std::function<void()> failure) {
     QNetworkRequest req(m_Origin.resolved(QUrl("/api/" + route)));
     req.setRawHeader("Origin", m_Origin.toString(QUrl::RemovePath | QUrl::StripTrailingSlash).toUtf8());
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = post ? m_Network.post(req, QJsonDocument(body).toJson(QJsonDocument::Compact)) : m_Network.get(req);
     QTimer::singleShot(post ? 190000 : 6000, reply, [reply]() { if (!reply->isFinished()) reply->abort(); });
-    connect(reply, &QNetworkReply::finished, this, [this, reply, route, success]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, route, success, failure]() {
         if (route == "status") m_Refreshing = false;
         const auto bytes = reply->readAll();
         const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -30,6 +31,7 @@ void PlatformClient::request(QString route, QJsonObject body, bool post, std::fu
         const bool ok = reply->error() == QNetworkReply::NoError && code >= 200 && code < 300 && !value.isEmpty();
         reply->deleteLater();
         if (!ok) {
+            if (failure) failure();
             if (route == "status") { m_Status = QJsonObject{{"state", "offline"}, {"own", false}}; }
             if (code == 401) { m_Authenticated = false; m_Poll.stop(); }
             fail(value.value("error").toString("Sem confirmação do HOST. Verifique HTTPS, Tailscale e a conexão."));
@@ -82,11 +84,19 @@ void PlatformClient::stream(QObject* object) {
     m_Busy = true; m_Message = "Conectando ao player integrado…"; emit changed();
     if (m_Status.value("paired").toBool()) { launch(manager); return; }
     auto pairing = new CliPair::Launcher(host, "", this);
-    connect(pairing, &CliPair::Launcher::pairing, this, [this](QString, QString pin) {
-        request("session/pair", {{"pin", pin}}, true, [](QJsonObject) {});
+    struct PairResult { bool nativeReady = false; bool authorized = false; bool failed = false; bool launched = false; };
+    auto result = std::make_shared<PairResult>();
+    auto finish = [this, manager, result]() {
+        if (result->nativeReady && result->authorized && !result->failed && !result->launched) {
+            result->launched = true;
+            launch(manager);
+        }
+    };
+    connect(pairing, &CliPair::Launcher::pairing, this, [this, result, finish](QString, QString pin) {
+        request("session/pair", {{"pin", pin}}, true, [result, finish](QJsonObject) { result->authorized = true; finish(); }, [result]() { result->failed = true; });
     });
-    connect(pairing, &CliPair::Launcher::failed, this, [this, pairing](QString message) { fail(message); pairing->deleteLater(); });
-    connect(pairing, &CliPair::Launcher::success, this, [this, pairing, manager]() { pairing->deleteLater(); launch(manager); });
+    connect(pairing, &CliPair::Launcher::failed, this, [this, pairing, result](QString message) { result->failed = true; fail(message); pairing->deleteLater(); });
+    connect(pairing, &CliPair::Launcher::success, this, [pairing, result, finish]() { result->nativeReady = true; pairing->deleteLater(); finish(); });
     pairing->execute(manager);
 }
 void PlatformClient::launch(ComputerManager* manager) {

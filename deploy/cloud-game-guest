@@ -7,6 +7,7 @@ import re
 import ssl
 import subprocess
 import sys
+import time
 import urllib.request
 
 
@@ -18,7 +19,7 @@ def api(path, body=None):
     request = urllib.request.Request('https://127.0.0.1:47990' + path,
         data=None if body is None else json.dumps(body).encode(),
         headers={'Authorization': 'Basic ' + auth, 'Content-Type': 'application/json'})
-    with urllib.request.urlopen(request, context=context, timeout=3) as response:
+    with urllib.request.urlopen(request, context=context, timeout=35 if body is not None else 3) as response:
         return json.load(response)
 
 
@@ -27,7 +28,20 @@ def main():
         pin = sys.stdin.read(5)
         if not re.fullmatch(r'\d{4}', pin):
             raise ValueError('PIN inválido')
-        return api('/api/pin', {'pin': pin, 'name': 'Cloud Game Player'})
+        # Current Sunshine binds approval to a pending request ID and returns only
+        # after the cryptographic handshake. Wait for Moonlight's first request.
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            pending = api('/api/pin').get('pairings', [])
+            if len(pending) > 1:
+                raise RuntimeError('Mais de um pedido de pareamento; sessão recusada.')
+            if pending:
+                pairing_id = pending[0].get('id', '')
+                if not re.fullmatch(r'[a-fA-F0-9]{32}', pairing_id):
+                    raise RuntimeError('Identificador de pareamento inválido.')
+                return api('/api/pin', {'pairing_id': pairing_id, 'pin': pin, 'name': 'Cloud Game Player'})
+            time.sleep(0.25)
+        raise RuntimeError('Moonlight não iniciou o pareamento no prazo.')
     if sys.argv[1:] != ['status']:
         raise ValueError('Operação inválida')
     # A process listening on a port is not proof of streaming. Read upstream's
@@ -36,6 +50,8 @@ def main():
     if not re.fullmatch(r'[0-9a-f]{32}', invocation):
         return {'ready': False, 'connected': False}
     apps = api('/api/apps')
+    if not isinstance(api('/api/pin').get('pairings'), list):
+        raise RuntimeError('Sunshine incompatível: API de pedidos de pareamento ausente.')
     if not any(app.get('name') == 'Desktop' for app in apps.get('apps', [])):
         return {'ready': False, 'connected': False}
     journal = subprocess.run(['journalctl', '--no-pager', '-o', 'cat', '--grep=CLIENT (CONNECTED|DISCONNECTED)', '_SYSTEMD_INVOCATION_ID=' + invocation], text=True, capture_output=True)

@@ -1,0 +1,68 @@
+name: Build integrated native clients
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'integrations/**'
+      - 'tools/native_sources.py'
+      - '.github/workflows/native-clients.yml'
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: python3 tools/native_sources.py moonlight-android --sync
+      - name: Build APK with embedded native decoder
+        working-directory: third_party/moonlight-android
+        run: sh gradlew assembleNonRootDebug --no-daemon --max-workers=2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-game-android-debug-internal
+          path: third_party/moonlight-android/app/build/outputs/apk/nonRoot/debug/*.apk
+          if-no-files-found: error
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/native_sources.py moonlight-qt --sync
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y qt6-base-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools libsdl2-dev libsdl2-ttf-dev libssl-dev libopus-dev libavcodec-dev libavutil-dev libswscale-dev libva-dev libvdpau-dev libegl1-mesa-dev libdrm-dev libx11-dev libxcb1-dev
+      - name: Compile integrated desktop client
+        run: |
+          mkdir -p build/linux
+          cd build/linux
+          qmake6 ../../third_party/moonlight-qt/moonlight-qt.pro CONFIG+=release
+          make -j2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-game-linux-binary-internal
+          path: build/linux/app/moonlight
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - run: python tools/native_sources.py moonlight-qt --sync
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.12.0'
+          arch: win64_msvc2022_64
+          cache: true
+      - name: Fetch upstream native dependencies
+        working-directory: third_party/moonlight-qt
+        run: ./setup-deps.ps1
+      - name: Build and deploy client
+        working-directory: third_party/moonlight-qt
+        shell: cmd
+        run: scripts\build-arch.bat Release x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-game-windows-build-internal
+          path: third_party/moonlight-qt/build/deploy-x64-release/**
+          if-no-files-found: error

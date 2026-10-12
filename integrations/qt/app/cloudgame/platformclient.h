@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QVariantMap>
 #include <QTimer>
+#include <QUrl>
 #include <functional>
 class ComputerManager;
 class Session;
@@ -31,7 +32,7 @@ signals:
     void changed();
     void sessionCreated(QString name, Session* session);
 private:
-    void request(QString route, QJsonObject body, bool post, std::function<void(QJsonObject)> success);
+    void request(QString route, QJsonObject body, bool post, std::function<void(QJsonObject)> success, std::function<void()> failure = {});
     void fail(QString message);
     void launch(ComputerManager* manager);
     QNetworkAccessManager m_Network;

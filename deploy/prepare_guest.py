@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 """Provision a clean Linux X11 guest. Does not install third-party software."""
-import getpass
 import grp
 import json
 import os
 import pathlib
 import pwd
+import secrets
 import shutil
 import subprocess
 import sys
@@ -30,11 +30,15 @@ def main():
     groups = {g.gr_name for g in grp.getgrall() if 'player' in g.gr_mem or g.gr_gid == player.pw_gid}
     if groups & denied:
         sys.exit('Remova os grupos administrativos do player: ' + ', '.join(groups & denied))
-    for command in ('sunshine','qemu-ga','journalctl','systemctl'):
+    for command in ('sunshine','qemu-ga','journalctl','systemctl','runuser','usermod','groupadd','udevadm','modprobe'):
         if not shutil.which(command):
             sys.exit('Componente ausente na VM: ' + command)
     if shutil.which('sunshine') != '/usr/bin/sunshine':
         sys.exit('Esta unidade requer Sunshine nativo em /usr/bin/sunshine, não Flatpak.')
+    for output in ('/etc/cloud-game/sunshine-api.json', '/etc/systemd/system/cloud-game-sunshine.service',
+                   '/usr/local/libexec/cloud-game-guest', '/etc/udev/rules.d/85-cloud-game-input.rules'):
+        if pathlib.Path(output).exists() or pathlib.Path(output).is_symlink():
+            sys.exit('Arquivo existente preservado: ' + output)
     home = pathlib.Path('/home/player')
     config = home / '.config/sunshine'
     if config.exists():
@@ -54,13 +58,29 @@ def main():
     target = credentials / 'sunshine-api.json'
     if target.exists():
         sys.exit('Credencial existente preservada.')
-    print('Defina a credencial administrativa do Sunshine no primeiro acesso local a https://localhost:47990.\nEsta credencial é interna à VM e NÃO é uma senha Steam.')
-    username = input('Usuário administrativo do Sunshine: ').strip()
-    password = getpass.getpass('Senha administrativa do Sunshine (12+ caracteres): ')
-    if not username or len(password) < 12:
-        sys.exit('Credencial inválida.')
+    # Provision the official CLI while this is an empty maintenance image.
+    # Never print command arguments or exception repr: they contain this internal
+    # administrative password (never a Steam credential).
+    username = 'cloud-game-internal'
+    password = secrets.token_urlsafe(32)
+    result = subprocess.run(['runuser', '-u', 'player', '--', '/usr/bin/env',
+        'HOME=/home/player', '/usr/bin/sunshine', str(config / 'sunshine.conf'),
+        '--creds', username, password], capture_output=True)
+    if result.returncode != 0:
+        sys.exit('Falha ao configurar a credencial interna do Sunshine. A imagem ainda não pode ser selada.')
     target.write_text(json.dumps({'username':username,'password':password}))
     target.chmod(0o600)
+    # These groups and devices are inside the disposable guest, never the HOST.
+    available = {g.gr_name for g in grp.getgrall()}
+    if 'input' not in available:
+        run('groupadd', '--system', 'input')
+        available.add('input')
+    run('usermod', '-aG', ','.join(sorted(available & {'input', 'video', 'render'})), 'player')
+    pathlib.Path('/etc/udev/rules.d/85-cloud-game-input.rules').write_text(
+        'KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"\n')
+    run('udevadm', 'control', '--reload-rules')
+    run('modprobe', 'uinput')
+    run('udevadm', 'trigger', '--subsystem-match=misc', '--sysname-match=uinput')
     libexec = pathlib.Path('/usr/local/libexec')
     libexec.mkdir(exist_ok=True)
     shutil.copyfile(HERE / 'cloud-game-guest', libexec / 'cloud-game-guest')
@@ -71,7 +91,7 @@ def main():
     shutil.copyfile(HERE / service.name, service)
     run('systemctl','daemon-reload')
     run('systemctl','enable','qemu-guest-agent.service','cloud-game-sunshine.service')
-    print('Arquivos preparados. Configure rede estática, autologin X11, Sunshine local e teste captura/GPU antes de selar a imagem. Consulte docs/BAZZITE.md.')
+    print('Serviço e credencial interna do Sunshine preparados. Configure rede estática e autologin X11, e teste captura/GPU antes de selar a imagem. Consulte docs/BAZZITE.md.')
 
 
 if __name__ == '__main__':

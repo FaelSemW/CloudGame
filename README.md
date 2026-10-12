@@ -1,8 +1,8 @@
 # Cloud Game
 
-HOST Bazzite + CLIENT web responsivo para Android/Windows/Linux, com Sunshine e Moonlight oficiais como componentes de streaming externos.
+HOST Bazzite e clientes Android/desktop com integração dos projetos oficiais Sunshine e Moonlight, em desenvolvimento.
 
-**Estado: implementação inicial, ainda não uma V1 homologada.** O controle local funciona e tem testes automatizados. O caminho Linux de VM/GPU/rede está implementado, mas não foi executado em Bazzite. Não há APK, executável nativo próprio nem decoder Moonlight incorporado. O cliente abre instruções de conexão no Moonlight externo, explicitamente.
+**Estado: implementação em andamento, ainda não uma V1 homologada.** O controle local funciona e tem testes automatizados. O caminho Linux de VM/GPU/rede está implementado, mas não foi executado em Bazzite. O APK Android debug já compilou com autenticação própria e player Moonlight no mesmo aplicativo. A integração Qt está em código, ainda sem compilação. Streaming real e instalação completa continuam pendentes. A interface web anterior continua apresentando instruções de conexão externa e não equivale ao cliente nativo. Consulte [integração nativa](docs/NATIVE-INTEGRATION.md).
 
 A pasta recebida estava vazia, sem Git ou código a preservar. Esta implementação inicializou o repositório e não substituiu um produto anterior.
 

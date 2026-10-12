@@ -1,0 +1,16 @@
+{
+  "artifact": "app-nonRoot-debug.apk",
+  "size": 17739264,
+  "sha256": "fdf2597c00c2c20eec810479b7987626313effbef1428c725bb2a10e1efb6c29",
+  "build": "debug",
+  "controlActivityInDex": true,
+  "moonlightGameInDex": true,
+  "nativeLibraries": [
+    "lib/arm64-v8a/libmoonlight-core.so",
+    "lib/armeabi-v7a/libmoonlight-core.so",
+    "lib/x86/libmoonlight-core.so",
+    "lib/x86_64/libmoonlight-core.so"
+  ],
+  "streamingTested": false,
+  "hostTested": false
+}
