@@ -14,12 +14,22 @@ jobs:
         run: sudo python3 deploy/build_image.py build/guest-image --timeout 2400
       - name: Verify second boot and real Sunshine API
         run: sudo python3 deploy/verify_image.py build/guest-image/base.qcow2 /tmp/cg-verify
+      - name: Collect diagnostics without publishing the guest disk
+        if: always()
+        run: |
+          mkdir -p build/guest-evidence
+          for name in provision.log image-build.json; do
+            if sudo test -f "build/guest-image/$name"; then
+              sudo install -m 644 "build/guest-image/$name" "build/guest-evidence/$name"
+            fi
+          done
+          for name in boot.log sunshine.log verification.json; do
+            if sudo test -f "/tmp/cg-verify/$name"; then
+              sudo install -m 644 "/tmp/cg-verify/$name" "build/guest-evidence/$name"
+            fi
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: cloudgame-guest-provisioning-evidence
-          path: |
-            build/guest-image/provision.log
-            build/guest-image/image-build.json
-            /tmp/cg-verify/*.log
-            /tmp/cg-verify/verification.json
+          path: build/guest-evidence/
