@@ -9,6 +9,7 @@
 #include <QNetworkCookieJar>
 #include <QJsonDocument>
 #include <QRegularExpression>
+#include <QHostAddress>
 #include <memory>
 
 PlatformClient::PlatformClient(QObject* parent) : QObject(parent) {
@@ -22,6 +23,9 @@ void PlatformClient::request(QString route, QJsonObject body, bool post, std::fu
     req.setRawHeader("Origin", m_Origin.toString(QUrl::RemovePath | QUrl::StripTrailingSlash).toUtf8());
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = post ? m_Network.post(req, QJsonDocument(body).toJson(QJsonDocument::Compact)) : m_Network.get(req);
+    connect(reply, &QNetworkReply::readyRead, reply, [reply]() {
+        if (reply->bytesAvailable() > 1024 * 1024) reply->abort();
+    });
     QTimer::singleShot(post ? 190000 : 6000, reply, [reply]() { if (!reply->isFinished()) reply->abort(); });
     connect(reply, &QNetworkReply::finished, this, [this, reply, route, success, failure]() {
         if (route == "status") m_Refreshing = false;
@@ -34,7 +38,11 @@ void PlatformClient::request(QString route, QJsonObject body, bool post, std::fu
             if (failure) failure();
             if (route == "status") { m_Status = QJsonObject{{"state", "offline"}, {"own", false}}; }
             if (code == 401) { m_Authenticated = false; m_Poll.stop(); }
-            fail(value.value("error").toString("Sem confirmação do HOST. Verifique HTTPS, Tailscale e a conexão."));
+            const QString message = value.value("error").toString("Sem confirmação do HOST. Verifique HTTPS, Tailscale e a conexão.");
+            // A poll started before a user action must not release that action's
+            // busy guard and allow a second native stream launch.
+            if (route == "status") { m_Message = message; emit changed(); }
+            else { fail(message); }
             return;
         }
         success(value);
@@ -78,7 +86,9 @@ void PlatformClient::stream(QObject* object) {
     if (!manager || m_Busy || !m_Authenticated || !m_Status.value("own").toBool()) return;
     const QString state = m_Status.value("state").toString();
     const QString host = m_Status.value("streamHost").toString();
-    if (!(state == "ready" || state == "reconnecting" || state == "streaming") || !QRegularExpression("^100\\.(?:6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.[0-9]{1,3}\\.[0-9]{1,3}$").match(host).hasMatch()) {
+    bool validIpv4 = false;
+    QHostAddress(host).toIPv4Address(&validIpv4);
+    if (!(state == "ready" || state == "reconnecting" || state == "streaming") || !validIpv4 || !QRegularExpression("^100\\.(?:6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.[0-9]{1,3}\\.[0-9]{1,3}$").match(host).hasMatch()) {
         fail("O HOST ainda não autorizou a conexão neste dispositivo."); return;
     }
     m_Busy = true; m_Message = "Conectando ao player integrado…"; emit changed();

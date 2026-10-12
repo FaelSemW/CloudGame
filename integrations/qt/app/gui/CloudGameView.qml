@@ -41,6 +41,7 @@ Item {
                 Button { text: "Sair da conta"; enabled: !CloudGame.busy; onClicked: CloudGame.logout() }
             }
             BusyIndicator { running: CloudGame.busy; visible: running }
+            Button { text: "Vídeo, áudio e controles"; enabled: !CloudGame.busy; onClicked: { toolBar.visible = true; stackView.push("SettingsView.qml") } }
             Label { text: CloudGame.message; visible: text.length > 0; color: "#ffc7a6"; wrapMode: Text.Wrap; Layout.fillWidth: true }
             Label { text: "Entre na Steam somente dentro do desktop remoto. Desconectar permite reconexão por até 2 minutos. Encerrar descarta os dados locais; saves na nuvem continuam na sua conta."; wrapMode: Text.Wrap; Layout.fillWidth: true }
         }
