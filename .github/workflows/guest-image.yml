@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 jobs:
   provision:
     runs-on: ubuntu-24.04
@@ -10,10 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils
+      - uses: actions/download-artifact@v4
+        with:
+          name: cloud-game-linux-package-and-startup
+          run-id: 38270190388
+          github-token: ${{ github.token }}
+          path: build/native-client
+      - name: Install previously compiled integrated client for transport verification
+        run: sudo apt-get install -y ./build/native-client/dist/CloudGame-Ubuntu24-amd64.deb xvfb imagemagick
       - name: Provision a real clean guest
         run: sudo python3 deploy/build_image.py build/guest-image --timeout 2400
       - name: Verify second boot and real Sunshine API
-        run: sudo python3 deploy/verify_image.py build/guest-image/base.qcow2 /tmp/cg-verify --timeout 180
+        run: sudo env GITHUB_ACTIONS=true xvfb-run -a python3 deploy/verify_image.py build/guest-image/base.qcow2 /tmp/cg-verify --timeout 180 --client /usr/bin/cloud-game-client
       - name: Collect diagnostics without publishing the guest disk
         if: always()
         run: |
@@ -21,6 +30,11 @@ jobs:
           for name in provision.log image-build.json; do
             if sudo test -f "build/guest-image/$name"; then
               sudo install -m 644 "build/guest-image/$name" "build/guest-evidence/$name"
+            fi
+          done
+          for name in pair.log stream.log stream.png; do
+            if sudo test -f "/tmp/cg-verify/stream/$name"; then
+              sudo install -m 644 "/tmp/cg-verify/stream/$name" "build/guest-evidence/$name"
             fi
           done
           for name in boot.log sunshine.log api-diagnostic.log display-diagnostic.log verification.json; do

@@ -23,8 +23,11 @@ def agent(path, operation, arguments=None):
     return reply['return']
 
 
-def execute(channel, path, args):
-    pid = agent(channel, 'guest-exec', {'path': path, 'arg': args, 'capture-output': True})['pid']
+def execute(channel, path, args, input_data=None):
+    arguments = {'path': path, 'arg': args, 'capture-output': True}
+    if input_data is not None:
+        arguments['input-data'] = base64.b64encode(input_data.encode()).decode()
+    pid = agent(channel, 'guest-exec', arguments)['pid']
     for _ in range(60):
         result = agent(channel, 'guest-exec-status', {'pid': pid})
         if result.get('exited'):
@@ -37,7 +40,7 @@ def execute(channel, path, args):
     raise RuntimeError('Guest command did not finish')
 
 
-def verify(image, directory, timeout=300):
+def verify(image, directory, timeout=300, client=None):
     image = image.resolve(); directory = directory.resolve()
     directory.mkdir(parents=True, mode=0o700, exist_ok=False)
     if ',' in str(directory) or len(str(directory / 'agent.sock')) >= 104:
@@ -45,11 +48,16 @@ def verify(image, directory, timeout=300):
     overlay = directory / 'test.qcow2'; channel = directory / 'agent.sock'
     subprocess.run(['qemu-img', 'create', '-f', 'qcow2', '-F', 'qcow2', '-b', str(image), str(overlay)], check=True)
     accelerated = os.access('/dev/kvm', os.R_OK | os.W_OK)
+    net = 'user,id=network,net=10.77.0.0/24,host=10.77.0.1'
+    if client:
+        if os.environ.get('GITHUB_ACTIONS') != 'true': raise RuntimeError('Client transport test is CI-only')
+        for protocol, ports in [('tcp', (47984, 47989, 48010)), ('udp', (47998, 47999, 48000, 48002, 48010))]:
+            for port in ports: net += f',hostfwd={protocol}:127.0.0.1:{port}-10.77.0.2:{port}'
     command = ['qemu-system-x86_64', '-machine', 'q35', '-accel', 'kvm' if accelerated else 'tcg',
         '-cpu', 'host' if accelerated else 'max', '-m', '4096', '-smp', '2', '-display', 'none',
         '-serial', 'stdio', '-monitor', 'none', '-no-reboot',
         '-drive', f'file={overlay},format=qcow2,if=virtio',
-        '-netdev', 'user,id=network,net=10.77.0.0/24,host=10.77.0.1',
+        '-netdev', net,
         '-device', 'virtio-net-pci,netdev=network,mac=52:54:00:77:00:02',
         '-device', 'virtio-serial-pci', '-chardev', f'socket,path={channel},server=on,wait=off,id=agent',
         '-device', 'virtserialport,chardev=agent,name=org.qemu.guest_agent.0',
@@ -101,9 +109,16 @@ def verify(image, directory, timeout=300):
                 except Exception:
                     pass
                 raise RuntimeError('Guest verification failed: ' + last)
+            transport = None
+            if client:
+                import sys
+                sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
+                from smoke_stream import check
+                transport = check(channel, client.resolve(), directory / 'stream')
             (directory / 'verification.json').write_text(json.dumps({
                 'sunshine': status, 'guestChecks': checks.strip(),
-                'realStreamValidated': False, 'physicalGpuValidated': False}, indent=2))
+                'realStreamValidated': transport is not None, 'transport': transport,
+                'physicalGpuValidated': False}, indent=2))
         finally:
             if process.poll() is None:
                 process.terminate()
@@ -118,5 +133,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path); parser.add_argument('directory', type=Path)
     parser.add_argument('--timeout', type=int, default=300)
+    parser.add_argument('--client', type=Path, help='CI-only native transport verification')
     args = parser.parse_args()
-    verify(args.image, args.directory, args.timeout)
+    verify(args.image, args.directory, args.timeout, args.client)
