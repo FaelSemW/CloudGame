@@ -1,0 +1,21 @@
+name: Verify automatic Sunshine guest provisioning
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  provision:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils
+      - name: Provision a real clean guest
+        run: sudo python3 deploy/build_image.py build/guest-image --timeout 2400
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloudgame-guest-provisioning-evidence
+          path: |
+            build/guest-image/provision.log
+            build/guest-image/image-build.json
