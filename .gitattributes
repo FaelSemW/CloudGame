@@ -1,5 +1,8 @@
 * text=auto
 *.py text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.pyz binary
 *.service text eol=lf
 *.timer text eol=lf
 *.mount text eol=lf
