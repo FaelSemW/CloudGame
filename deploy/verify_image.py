@@ -37,7 +37,7 @@ def execute(channel, path, args):
     raise RuntimeError('Guest command did not finish')
 
 
-def verify(image, directory):
+def verify(image, directory, timeout=300):
     image = image.resolve(); directory = directory.resolve()
     directory.mkdir(parents=True, mode=0o700, exist_ok=False)
     if ',' in str(directory) or len(str(directory / 'agent.sock')) >= 104:
@@ -58,7 +58,7 @@ def verify(image, directory):
     with (directory / 'boot.log').open('wb') as log:
         process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
         try:
-            deadline = time.monotonic() + 300
+            deadline = time.monotonic() + timeout
             while time.monotonic() < deadline:
                 if process.poll() is not None: raise RuntimeError('Verification VM exited unexpectedly')
                 try:
@@ -85,6 +85,12 @@ def verify(image, directory):
                 try:
                     diagnostic = execute(channel, '/usr/bin/journalctl', ['-u', 'cloud-game-sunshine', '-b', '--no-pager', '-n', '80'])
                     (directory / 'sunshine.log').write_text(diagnostic)
+                    diagnostic = execute(channel, '/usr/bin/python3', ['-c',
+                        'import runpy\nm=runpy.run_path("/usr/local/libexec/cloud-game-guest")\n'
+                        'for path in ("/api/apps", "/api/pin"):\n'
+                        ' try: print(path, sorted(m["api"](path).keys()))\n'
+                        ' except Exception as e: print(path, type(e).__name__, str(e))\n'])
+                    (directory / 'api-diagnostic.log').write_text(diagnostic)
                 except Exception:
                     pass
                 raise RuntimeError('Guest verification failed: ' + last)
@@ -104,5 +110,6 @@ def verify(image, directory):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path); parser.add_argument('directory', type=Path)
+    parser.add_argument('--timeout', type=int, default=300)
     args = parser.parse_args()
-    verify(args.image, args.directory)
+    verify(args.image, args.directory, args.timeout)

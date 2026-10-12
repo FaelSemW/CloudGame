@@ -13,17 +13,17 @@ jobs:
       - name: Provision a real clean guest
         run: sudo python3 deploy/build_image.py build/guest-image --timeout 2400
       - name: Verify second boot and real Sunshine API
-        run: sudo python3 deploy/verify_image.py build/guest-image/base.qcow2 /tmp/cg-verify
+        run: sudo python3 deploy/verify_image.py build/guest-image/base.qcow2 /tmp/cg-verify --timeout 180
       - name: Collect diagnostics without publishing the guest disk
         if: always()
         run: |
-          mkdir -p build/guest-evidence
+          sudo install -d -m 755 build/guest-evidence
           for name in provision.log image-build.json; do
             if sudo test -f "build/guest-image/$name"; then
               sudo install -m 644 "build/guest-image/$name" "build/guest-evidence/$name"
             fi
           done
-          for name in boot.log sunshine.log verification.json; do
+          for name in boot.log sunshine.log api-diagnostic.log verification.json; do
             if sudo test -f "/tmp/cg-verify/$name"; then
               sudo install -m 644 "/tmp/cg-verify/$name" "build/guest-evidence/$name"
             fi
