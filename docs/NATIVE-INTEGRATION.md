@@ -24,4 +24,12 @@ A primeira compilação falhou porque o NDK recusa caminhos com espaços. `tools
 
 23 testes Node e 19 testes Python passaram. Incluem concorrência, bloqueio de limpeza e contrato de pareamento Sunshine por identificador. Não equivalem à homologação Linux. O provisionador guest agora gera a credencial Sunshine pela CLI oficial e configura permissões de entrada dentro da VM, mas essas alterações não foram executadas em Linux.
 
-Pendências concretas: Qt/MSVC e ambiente Linux para compilar desktop; provisionamento automático da imagem Sunshine e dependências do HOST; assinatura e pacotes finais; testes reais Android/desktop e Bazzite/GPU; publicação autenticada no GitHub (o push anterior foi recusado por ausência de credenciais). Não há release completa disponível.
+## Evidências de desktop no GitHub Actions
+
+[Execução 38226584427](https://github.com/FaelSemW/CloudGame/actions/runs/38226584427): Android, Windows e Linux concluídos com sucesso. Windows foi compilado com MSVC e Qt 6.12.0 e empacotado com Inno Setup. Linux foi compilado no Ubuntu 24.04 e empacotado como `.deb`, com dependências da distribuição; esse pacote não é um instalador para Bazzite. A execução com Xvfb abriu a interface real CloudGame e salvou captura e logs nos artefatos. O aviso de ausência de decoder por hardware é esperado nesse runner sem GPU.
+
+A revisão do log encontrou bindings QML acessando o controlador durante seu encerramento. A ordem de destruição C++ foi corrigida para manter o controlador vivo até a destruição da engine QML; o teste agora rejeita também `TypeError`. A execução citada acima antecede essa correção; seu novo resultado deve ser consultado na execução do commit correspondente.
+
+O push autenticado para GitHub funciona. Os instaladores estão em artefatos de Actions, ainda sem release pública completa. `tools/source_bundle.py` prepara fontes rastreados, submódulos fixados, overlays aplicados e avisos de licença, excluindo dados locais e diretórios de build não rastreados. O SDK Qt e suas dependências redistribuídas exigem fontes/avisos adicionais; gerar esse arquivo não constitui uma auditoria completa.
+
+Pendências concretas: provisionamento automático da imagem Sunshine e dependências do HOST; fontes e avisos completos dos runtimes redistribuídos; assinatura de produção Android; testes reais Android/desktop e Bazzite/GPU. O Windows ainda não teve sua interface nem instalação executadas em teste. Não há release completa disponível e os scripts que consultam releases não estão prontos para uso público.

@@ -7,6 +7,8 @@ on:
       - 'tools/native_sources.py'
       - 'tools/smoke_desktop.py'
       - 'tools/package_linux.py'
+      - 'tools/source_bundle.py'
+      - 'tools/smoke_windows.ps1'
       - 'deploy/windows-client.iss'
       - '.github/workflows/native-clients.yml'
 permissions:
@@ -21,19 +23,25 @@ jobs:
           distribution: temurin
           java-version: '21'
       - run: python3 tools/native_sources.py moonlight-android --sync
+      - name: Preserve corresponding client sources and notices
+        run: python3 tools/source_bundle.py moonlight-android --output dist/CloudGame-Android-sources.tar.gz --notices third_party/moonlight-android/app/src/main/assets/source-notices
       - name: Build APK with embedded native decoder
         working-directory: third_party/moonlight-android
         run: sh gradlew assembleNonRootDebug --no-daemon --max-workers=2
       - uses: actions/upload-artifact@v4
         with:
           name: cloud-game-android-debug-internal
-          path: third_party/moonlight-android/app/build/outputs/apk/nonRoot/debug/*.apk
+          path: |
+            third_party/moonlight-android/app/build/outputs/apk/nonRoot/debug/*.apk
+            dist/CloudGame-Android-sources.tar.gz
           if-no-files-found: error
   linux:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/native_sources.py moonlight-qt --sync
+      - name: Preserve corresponding client sources and notices
+        run: python3 tools/source_bundle.py moonlight-qt --output dist/CloudGame-Desktop-sources.tar.gz --notices build/desktop-notices
       - name: Install native build dependencies
         run: sudo apt-get update && sudo apt-get install -y qt6-base-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools libsdl2-dev libsdl2-ttf-dev libssl-dev libopus-dev libavcodec-dev libavutil-dev libswscale-dev libva-dev libvdpau-dev libegl1-mesa-dev libdrm-dev libx11-dev libxcb1-dev qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick xvfb imagemagick
       - name: Compile integrated desktop client
@@ -52,6 +60,7 @@ jobs:
           name: cloud-game-linux-package-and-startup
           path: |
             dist/*.deb
+            dist/*sources.tar.gz
             build/desktop-smoke/
       - uses: actions/upload-artifact@v4
         with:
@@ -83,6 +92,14 @@ jobs:
           if (-not (Test-Path -LiteralPath $compiler)) { throw 'Inno Setup compiler missing' }
           & $compiler "/DClientDir=$pwd\third_party\moonlight-qt\build\deploy-x64-release" "/DProjectDir=$pwd" deploy/windows-client.iss
           if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
+      - name: Verify Windows install, startup and uninstall
+        shell: pwsh
+        run: ./tools/smoke_windows.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloud-game-windows-startup
+          path: build/windows-smoke/
       - uses: actions/upload-artifact@v4
         with:
           name: cloud-game-windows-installer

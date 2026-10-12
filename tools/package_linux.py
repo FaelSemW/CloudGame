@@ -35,6 +35,9 @@ def main():
         legal=package/'usr/share/doc/cloud-game-client'; legal.mkdir(parents=True)
         shutil.copyfile(ROOT/'LICENSE',legal/'copyright')
         shutil.copytree(ROOT/'licenses',legal/'licenses')
+        notices=ROOT/'build/desktop-notices'
+        if not notices.is_dir(): raise RuntimeError('Generate native sources and notices before packaging')
+        shutil.copytree(notices,legal/'third-party-notices')
         (legal/'SOURCE').write_text('CloudGame: https://github.com/FaelSemW/CloudGame\nGPLv3 engine sources and build scripts accompany the release. Runtime libraries are supplied by Ubuntu repositories.\n')
         control=package/'DEBIAN'; control.mkdir()
         (control/'control').write_text('Package: cloud-game-client\nVersion: 0.1.0~dev1\nArchitecture: amd64\nMaintainer: CloudGame <cloudgame@localhost>\nSection: games\nPriority: optional\nDepends: '+deps.removeprefix('shlibs:Depends=')+', '+', '.join(QML)+'\nDescription: Cloud Game with integrated Moonlight streaming\n Platform authentication and native video, audio and controller support.\n')

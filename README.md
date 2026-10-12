@@ -2,7 +2,7 @@
 
 HOST Bazzite e clientes Android/desktop com integração dos projetos oficiais Sunshine e Moonlight, em desenvolvimento.
 
-**Estado: implementação em andamento, ainda não uma V1 homologada.** O controle local funciona e tem testes automatizados. O caminho Linux de VM/GPU/rede está implementado, mas não foi executado em Bazzite. O APK Android debug já compilou com autenticação própria e player Moonlight no mesmo aplicativo. A integração Qt está em código, ainda sem compilação. Streaming real e instalação completa continuam pendentes. A interface web anterior continua apresentando instruções de conexão externa e não equivale ao cliente nativo. Consulte [integração nativa](docs/NATIVE-INTEGRATION.md).
+**Estado: implementação em andamento, ainda não uma V1 homologada.** O controle local funciona e tem testes automatizados. Os clientes nativos Android, Windows e Linux compilaram no GitHub Actions, incluindo APK, instalador Windows e pacote Ubuntu 24.04. O cliente Linux abriu sua interface em um display de teste. Todos incorporam o motor Moonlight; não exigem outro aplicativo Moonlight instalado. O caminho Linux de VM/GPU/rede está implementado, mas não foi executado em Bazzite. Streaming real e instalação completa do HOST continuam pendentes. Consulte [integração nativa e evidências](docs/NATIVE-INTEGRATION.md).
 
 A pasta recebida estava vazia, sem Git ou código a preservar. Esta implementação inicializou o repositório e não substituiu um produto anterior.
 
@@ -25,7 +25,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 ## Arquitetura implementada
 
 - **HOST:** serviço Node, SQLite, autenticação e painel administrativo integrado. Escuta somente em loopback; Tailscale Serve termina HTTPS na rede privada.
-- **CLIENT:** a mesma interface responsiva, com autenticação, estado consultado a cada 2 segundos, reserva, pareamento e encerramento. Usa Moonlight oficial externo para vídeo/áudio/entrada.
+- **CLIENT:** aplicativos nativos Android e Qt para Windows/Linux, com autenticação, estado consultado a cada 2 segundos, reserva, pareamento e encerramento. Incorporam o código oficial Moonlight para vídeo/áudio/entrada. A interface web permanece como painel do HOST e alternativa de controle manual.
 - **Isolamento:** VM KVM/QEMU Linux com GPU dedicada via VFIO. Disco qcow2 temporário sobre imagem-base somente leitura. Nenhuma pasta ou disco pessoal compartilhado. Escritas da sessão em tmpfs sem swap.
 - **Controle privilegiado:** helper Python de operações fixas, UUIDs gerados no servidor, bloqueio entre processos e nftables limitando streaming a um IPv4 Tailscale autorizado.
 - **Limpeza:** revoga tráfego, encerra VM, verifica ausência do QEMU, remove somente os arquivos esperados e mantém bloqueio em qualquer falha. Watchdog independente impõe prazo máximo.
