@@ -91,6 +91,13 @@ def verify(image, directory, timeout=300):
                         ' try: print(path, sorted(m["api"](path).keys()))\n'
                         ' except Exception as e: print(path, type(e).__name__, str(e))\n'])
                     (directory / 'api-diagnostic.log').write_text(diagnostic)
+                    diagnostic = execute(channel, '/usr/bin/python3', ['-c',
+                        'import pathlib,subprocess\n'
+                        'print(subprocess.check_output(["journalctl", "-u", "lightdm", "-b", "--no-pager"], text=True))\n'
+                        'for name in ("/var/log/lightdm/lightdm.log", "/var/log/lightdm/x-0.log", "/var/log/Xorg.0.log"):\n'
+                        ' p=pathlib.Path(name)\n'
+                        ' if p.is_file(): print(name, p.read_text()[-30000:])\n'])
+                    (directory / 'display-diagnostic.log').write_text(diagnostic)
                 except Exception:
                     pass
                 raise RuntimeError('Guest verification failed: ' + last)

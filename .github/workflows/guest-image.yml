@@ -23,7 +23,7 @@ jobs:
               sudo install -m 644 "build/guest-image/$name" "build/guest-evidence/$name"
             fi
           done
-          for name in boot.log sunshine.log api-diagnostic.log verification.json; do
+          for name in boot.log sunshine.log api-diagnostic.log display-diagnostic.log verification.json; do
             if sudo test -f "/tmp/cg-verify/$name"; then
               sudo install -m 644 "/tmp/cg-verify/$name" "build/guest-evidence/$name"
             fi
