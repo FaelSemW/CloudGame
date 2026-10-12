@@ -73,6 +73,8 @@ def main():
 if __name__ == '__main__':
     try:
         print(json.dumps(main()))
-    except Exception:
-        print('Falha ao verificar Sunshine. Consulte o journal da VM.', file=sys.stderr)
+    except Exception as error:
+        code = getattr(error, 'code', None)
+        detail = type(error).__name__ + (': ' + str(code) if isinstance(code, int) else '')
+        print('Falha ao verificar Sunshine (' + detail + '). Consulte o journal da VM.', file=sys.stderr)
         sys.exit(1)

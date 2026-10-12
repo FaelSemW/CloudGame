@@ -76,6 +76,7 @@ def verify(image, directory):
                         'print("guest account and mount checks passed")'])
                     break
                 except (OSError, RuntimeError, ValueError, KeyError) as error:
+                    if last != str(error): print('Waiting for guest: ' + str(error), flush=True)
                     last = str(error)
                     time.sleep(2)
             else:
