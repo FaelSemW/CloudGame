@@ -21,6 +21,6 @@ with (output/'startup.log').open('w') as log:
         try: process.wait(timeout=8)
         except subprocess.TimeoutExpired: process.kill(); process.wait()
 diagnostics=(output/'startup.log').read_text(errors='replace')
-for error in ['QQmlApplicationEngine failed','ReferenceError:','is not installed','Cannot assign','is not a type','Error loading QML']:
+for error in ['QQmlApplicationEngine failed','ReferenceError:','TypeError:','is not installed','Cannot assign','is not a type','Error loading QML']:
     if error in diagnostics: raise RuntimeError('QML startup failure: '+error)
 print('Desktop startup passed. This does not validate real streaming.')

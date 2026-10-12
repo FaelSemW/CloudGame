@@ -42,7 +42,8 @@ def assemble(name, sync=False):
     if name == 'moonlight-qt':
         main = original('app/main.cpp')
         main = '#include "cloudgame/platformclient.h"\n' + main
-        main = replace(main, '    QQmlApplicationEngine engine;', '    QQmlApplicationEngine engine;\n    PlatformClient cloudGame;\n    engine.rootContext()->setContextProperty("CloudGame", &cloudGame);')
+        # The context object must outlive the engine and its QML bindings.
+        main = replace(main, '    QQmlApplicationEngine engine;', '    PlatformClient cloudGame;\n    QQmlApplicationEngine engine;\n    engine.rootContext()->setContextProperty("CloudGame", &cloudGame);')
         main = replace(main, 'initialView = "qrc:/gui/PcView.qml";', 'initialView = "qrc:/gui/CloudGameView.qml";')
         main = replace(main, 'setOrganizationName("Moonlight Game Streaming Project")', 'setOrganizationName("CloudGame")')
         main = replace(main, 'setApplicationName("Moonlight")', 'setApplicationName("Cloud Game")')

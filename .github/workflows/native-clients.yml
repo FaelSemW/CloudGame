@@ -5,6 +5,9 @@ on:
     paths:
       - 'integrations/**'
       - 'tools/native_sources.py'
+      - 'tools/smoke_desktop.py'
+      - 'tools/package_linux.py'
+      - 'deploy/windows-client.iss'
       - '.github/workflows/native-clients.yml'
 permissions:
   contents: read
