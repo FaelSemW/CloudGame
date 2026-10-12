@@ -71,9 +71,11 @@ Tailscale usa coordenação externa e pode usar relay DERP. Não exige uma VM de
 
 ## 5. Cliente
 
-Instale Tailscale e [Moonlight oficial](https://moonlight-stream.org/) no dispositivo Android, Windows ou Linux. Abra a URL privada do HOST em um navegador atualizado. O manifesto permite usar um atalho de tela inicial quando suportado; não há modo offline nem garantia de instalação PWA em todo navegador.
+Os clientes nativos CloudGame Android e Windows/Linux incorporam Moonlight no mesmo aplicativo. Seus builds de desenvolvimento estão no GitHub Actions; ainda não há release pública homologada. O `.deb` disponível é para Ubuntu 24.04 amd64, não para instalar no HOST Bazzite. Tailscale precisa estar conectado no dispositivo do jogador.
 
-Entre com a senha da **plataforma**, inicie a sessão e aguarde **Pronto para conectar**. No Moonlight, adicione manualmente o IPv4 apresentado. Digite o PIN exibido pelo Moonlight no cliente Cloud Game e abra `Desktop`. O pareamento é novo a cada sessão; remova/repare o registro no Moonlight se ele ainda considerar válido um pareamento anterior. Apenas uma tentativa efetiva de pareamento é admitida para evitar duplicação após falha; se o PIN for incorreto, encerre e inicie outra sessão.
+No aplicativo CloudGame, informe a origem HTTPS privada do HOST e entre com a senha da **plataforma**. Inicie a sessão e aguarde **Pronto para conectar**; depois use **Jogar / Reconectar**. O aplicativo inicia o pareamento nativo e envia o PIN para autorização pelo HOST automaticamente. O player só abre após a conclusão do pareamento e da autorização. Apenas uma tentativa efetiva de pareamento é admitida por sessão; falhas podem exigir encerrar e criar outra sessão.
+
+Como alternativa manual para diagnóstico, a interface web de controle ainda mostra instruções para um [Moonlight oficial externo](https://moonlight-stream.org/). Essa alternativa não é o fluxo dos aplicativos nativos nem transmite vídeo pelo navegador.
 
 Login Steam acontece na interface oficial da Steam **dentro da VM**. Fechar/desconectar Moonlight abre uma janela de até 120 segundos para reconexão à mesma sessão. Sem primeiro streaming, a reserva expira em 10 minutos. Limite total de 4 horas. Encerrar no Cloud Game descarta o ambiente; sair da conta Cloud Game, sozinho, não encerra streaming.
 

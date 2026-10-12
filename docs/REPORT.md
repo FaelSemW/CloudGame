@@ -6,9 +6,9 @@
 
 ## Inspeção inicial
 
-`G:\New Cloud Game` estava vazia; `git status` confirmou ausência de repositório. Não existiam configurações, dependências, licenças ou funcionalidades a preservar. Git foi inicializado, sem criar commits ou publicar remotamente.
+Na inspeção inicial, `G:\New Cloud Game` estava vazia e Git foi inicializado. O código agora está versionado e publicado em https://github.com/FaelSemW/CloudGame. A autenticação de push foi concluída pelo proprietário.
 
-Ferramentas confirmadas: Windows/PowerShell, Git, Node 22.23.3/npm 10.9.9, SQLite 3.51.3 embutido. WSL informou não estar instalado. Nenhum SDK .NET foi listado; Java/ADB, Python global, Go e Cargo não foram encontrados no PATH pesquisado. Um runtime Python fornecido pelo ambiente Codex foi usado apenas para análise sintática e testes portáveis. Não há evidência de GPU Bazzite, Qt/C++ toolchain, SDK/NDK Android ou aparelho Android acessível.
+Ferramentas confirmadas: Windows/PowerShell, Git, Node 22.23.3/npm 10.9.9 e runtime Python. JDK 21, Android SDK/NDK e Gradle foram preparados localmente e compilaram o APK. GitHub Actions disponibilizou Ubuntu 24.04/Qt e Windows/MSVC/Qt 6.12.0 para compilar os desktops. Não houve teste com GPU Bazzite nem aparelho Android. Por orientação do proprietário, não se controla a interface da máquina/VM pessoal.
 
 ## Implementado
 
@@ -22,6 +22,9 @@ Ferramentas confirmadas: Windows/PowerShell, Git, Node 22.23.3/npm 10.9.9, SQLit
 - Limpeza fail-closed: revogar rede, destruir VM, conferir processos e arquivos; novas sessões bloqueadas em erro. Recuperação no restart e watchdog root independente.
 - Instalador HOST com lançador gráfico opcional, systemd/SELinux paths e runtime Node oficial verificado por checksum; provisionador de guest que preserva configurações existentes.
 - Documentação de implantação, licenças, ameaças e testes em hardware.
+- Clientes próprios nativos Android e Qt: autenticação HTTPS, consulta ao HOST, reserva, pareamento aprovado pela API e streaming através do motor Moonlight incorporado no mesmo APK/processo. Desktop oferece configurações nativas de vídeo, áudio e controles.
+- Instalador Windows Inno Setup por usuário e pacote Ubuntu 24.04 `.deb`; pipeline de builds reais, teste de interface Linux e teste de instalação/inicialização/desinstalação Windows em runner descartável.
+- Empacotador de fontes rastreados e submódulos fixos com overlays, manifesto de hashes e avisos; recusa submódulos divergentes e preserva permissões executáveis. Não inclui arquivos locais não rastreados.
 
 ## Arquivos criados
 
@@ -35,24 +38,27 @@ Ferramentas confirmadas: Windows/PowerShell, Git, Node 22.23.3/npm 10.9.9, SQLit
 | Testes | `tests/control.test.mjs`, `tests/test_vm_helper.py` |
 | Licenças/docs | `LICENSE`, `licenses/*`, `README.md`, `docs/BAZZITE.md`, `docs/SECURITY.md`, `docs/LICENSES.md`, `docs/ACCEPTANCE.md`, este relatório |
 | Projeto | `package.json`, `package-lock.json`, `.gitignore`, `.gitattributes` |
+| Nativos | `integrations/qt/`, `integrations/android/`, `tools/native_sources.py`, `tools/build-android.ps1` |
+| Distribuição | `deploy/windows-client.iss`, `tools/package_linux.py`, `tools/source_bundle.py`, `install.ps1`, `.github/workflows/native-clients.yml` |
+| Evidências nativas | `tools/smoke_desktop.py`, `tools/smoke_windows.ps1`, `tools/github_ci.py`, `docs/NATIVE-INTEGRATION.md` |
 
 ## Validação executada
 
-22 testes Node aprovados, incluindo concorrência entre duas conexões SQLite, falhas de preparação/limpeza, ausência de confirmação explícita de descarte, verificação do HOST ocioso, reinício, limite absoluto, desconexão, pareamento, autenticação/revogação e proteção HTTP. 11 testes Python de política aprovados, incluindo rejeição de caminhos, IPs fora da rede, ausência de shares no XML e fechamento de firewall antes de descarte. São testes com injeção de falhas; o backend de produção não possui modo fictício.
+23 testes Node e 20 testes Python aprovados, incluindo concorrência entre duas conexões SQLite, falhas de preparação/limpeza, ausência de confirmação explícita de descarte, reinício, limites de sessão, autenticação/revogação, proteção HTTP, rejeição de caminhos, IPs fora da rede, ausência de shares no XML, pareamento Sunshine por identificador e exclusão de arquivos privados do pacote de fontes. São testes com injeção de falhas; o backend de produção não possui modo fictício.
 
-`npm run check` passou. `py_compile` foi executado nos scripts Python. `npm start` iniciou o servidor real em loopback no Windows. A interface de primeira configuração foi inspecionada no navegador em largura de desktop e celular; nenhuma rolagem horizontal foi detectada. Não foi validada uma sessão de streaming pela UI, nem um APK/EXE compilado.
+`npm run check` passou. O servidor real iniciou em loopback no Windows. APK Android debug, desktop Windows/instalador e desktop Linux/pacote compilaram na [execução 38226584427](https://github.com/FaelSemW/CloudGame/actions/runs/38226584427). O Linux abriu a interface em Xvfb. A inspeção do encerramento identificou um erro de lifetime do controlador QML; a correção passou no job Linux da [execução 38269256698](https://github.com/FaelSemW/CloudGame/actions/runs/38269256698). Alterações posteriores possuem seus próprios jobs e só devem ser consideradas validadas após conclusão. Não houve streaming real de jogo.
 
 ## Decisões e limitações relevantes
 
 1. **VM inteira** em vez de diretório/home separado: protege o desktop do proprietário, com custo de RAM e necessidade de GPU dedicada. Não atende ainda instalação simples universal, sobretudo GPU única.
 2. **Biblioteca dentro da base imutável**: jogos não são reinstalados por sessão. Patches/cache/saves locais são descartados; jogos que exigem grandes escritas ou anticheat incompatível devem ser restringidos.
-3. **Moonlight externo**: a integração nativa foi avaliada e não implementada. O produto possui HOST e cliente web de controle, mas ainda requer instalar o aplicativo Moonlight separadamente. Não há vídeo no navegador, APK/EXE próprio ou abertura automática garantida do Moonlight.
+3. **Moonlight incorporado**: os clientes nativos usam os projetos oficiais sem reimplementar codecs/protocolo; não exigem instalar outro Moonlight. A interface web anterior é somente controle e administração. O executável interno Windows ainda se chama `Moonlight.exe`, dentro da instalação Cloud Game.
 4. **Tailscale + Serve**: sem portas administrativas públicas, mas depende de coordenação Tailscale e configuração correta da tailnet. Headscale/WireGuard são alternativas descritas, não recursos implementados.
 5. **Bazzite não disponível**: instalador, systemd, SELinux, nft/firewalld, GPU reset e APIs Sunshine precisam ser homologados. Firewall pode bloquear encaminhamento até configuração específica; nenhuma regra global de segurança foi desativada para esconder isso.
 6. **Licenças**: textos e obrigações registradas, inventário inicial dos submódulos. Auditoria de dependências transitivas e código correspondente é necessária antes de distribuir binários upstream ou imagem completa.
 
 ## Etapas restantes
 
-Preparar HOST com duas GPUs/virtualização, criar imagem Linux limpa com Sunshine e jogos autorizados, configurar Tailscale/HTTPS/firewalld, instalar e executar o roteiro completo ACCEPTANCE.md. Depois corrigir incompatibilidades observadas, empacotar e simplificar a instalação. Integração nativa Android/Qt e distribuição assinada são trabalho adicional, não funcionalidades já entregues.
+Automatizar e homologar o provisionamento da imagem Linux limpa com Sunshine; preparar HOST com GPU dedicada/IOMMU; configurar Tailscale/HTTPS/firewalld; executar o roteiro ACCEPTANCE.md e corrigir incompatibilidades reais. Concluir avisos/fontes de runtimes redistribuídos, assinatura de produção Android e release pública com checksums. O bootstrap Windows consulta uma release que ainda não existe; não apresentar esse comando como instalador público funcionando. O bootstrap HOST anterior instala somente o controle e não entrega uma imagem de jogos pronta.
 
 Os critérios de conclusão fornecidos pelo usuário continuam pendentes onde exigem instalação Bazzite, streaming Android/desktop real, isolamento em execução e descarte verificado em hardware. A aprovação dos testes de controle não encerra esses critérios.
