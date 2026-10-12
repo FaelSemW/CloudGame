@@ -48,6 +48,8 @@ Ferramentas confirmadas: Windows/PowerShell, Git, Node 22.23.3/npm 10.9.9 e runt
 
 `npm run check` passou. O servidor real iniciou em loopback no Windows. APK Android debug, desktop Windows/instalador e desktop Linux/pacote compilaram na [execução 38226584427](https://github.com/FaelSemW/CloudGame/actions/runs/38226584427). O Linux abriu a interface em Xvfb. A inspeção do encerramento identificou um erro de lifetime do controlador QML; a correção passou no job Linux da [execução 38269256698](https://github.com/FaelSemW/CloudGame/actions/runs/38269256698). Alterações posteriores possuem seus próprios jobs e só devem ser consideradas validadas após conclusão. Não houve streaming real de jogo.
 
+A revisão 56ab70d passou nos três jobs da [execução 38270190388](https://github.com/FaelSemW/CloudGame/actions/runs/38270190388), incluindo instalação, inicialização e desinstalação Windows no runner descartável. Fontes/licenças adicionados depois estão identificados em `NATIVE-INTEGRATION.md`; não se presume que alterações posteriores já estejam nos binários desse run.
+
 ## Decisões e limitações relevantes
 
 1. **VM inteira** em vez de diretório/home separado: protege o desktop do proprietário, com custo de RAM e necessidade de GPU dedicada. Não atende ainda instalação simples universal, sobretudo GPU única.
