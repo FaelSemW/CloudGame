@@ -30,7 +30,7 @@ def unpack(destination):
 def doctor():
     release = Path('/etc/os-release')
     bazzite = release.exists() and 'bazzite' in release.read_text().lower()
-    requirements = ('python3', 'virsh', 'qemu-img', 'nft', 'tailscale', 'sudo', 'restorecon', 'semanage')
+    requirements = ('python3', 'virsh', 'qemu-img', 'qemu-system-x86_64', 'nft', 'tailscale', 'sudo', 'restorecon', 'semanage')
     result = {'system': platform.system(), 'architecture': platform.machine(),
               'bazzite': bazzite, 'kvm': Path('/dev/kvm').exists(),
               'tools': {name: bool(shutil.which(name)) for name in requirements},

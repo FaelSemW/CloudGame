@@ -12,6 +12,8 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils
       - name: Provision a real clean guest
         run: sudo python3 deploy/build_image.py build/guest-image --timeout 2400
+      - name: Verify second boot and real Sunshine API
+        run: sudo python3 deploy/verify_image.py build/guest-image/base.qcow2 /tmp/cg-verify
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -19,3 +21,5 @@ jobs:
           path: |
             build/guest-image/provision.log
             build/guest-image/image-build.json
+            /tmp/cg-verify/*.log
+            /tmp/cg-verify/verification.json
