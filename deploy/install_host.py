@@ -14,6 +14,7 @@ import tarfile
 import urllib.request
 import stat
 import uuid
+import argparse
 
 SOURCE = pathlib.Path(__file__).resolve().parent.parent
 DEST = pathlib.Path('/opt/cloud-game')
@@ -44,7 +45,7 @@ def write(path, text, mode=0o644):
     path.chmod(mode)
 
 
-def install():
+def install(software=False):
     if os.geteuid() != 0 or 'bazzite' not in pathlib.Path('/etc/os-release').read_text().lower():
         raise RuntimeError('Execute no Bazzite com pkexec, após preparar virtualização pelo Bazzite Portal.')
     if DEST.exists() or DEST.is_symlink():
@@ -67,6 +68,12 @@ def install():
     for output in outputs:
         if output.exists() or output.is_symlink():
             raise RuntimeError('Configuração existente preservada: ' + str(output))
+    from hardware import dedicated_gpus
+    candidates = dedicated_gpus()
+    if not software and len(candidates) != 1:
+        raise RuntimeError('Não há uma única GPU já dedicada a VFIO. Configure GPU/IOMMU primeiro; para testar em VM sem GPU, use install --software (renderização/encoding por CPU, desempenho limitado). Nenhum driver do proprietário foi alterado.')
+    if not software and candidates[0]['vendor'] == '0x10de':
+        raise RuntimeError('A imagem automática ainda não inclui o driver proprietário NVIDIA. Prepare uma imagem com o driver ou teste primeiro o perfil --software. Não será anunciada compatibilidade de GPU sem driver.')
     root = pathlib.Path('/var/lib/cloudgame')
     trusted_directory(root)
     base = root / 'base.qcow2'
@@ -82,6 +89,8 @@ def install():
         # Link refuses an unexpected existing destination; both paths are on the same volume.
         os.link(image, base)
         image.unlink()
+    from verify_image import verify
+    verify(base, pathlib.Path('/tmp') / ('cg-check-' + uuid.uuid4().hex[:12]))
     try:
         pwd.getpwnam('cloud-game')
     except KeyError:
@@ -107,7 +116,10 @@ def install():
     (root / 'volatile').mkdir(mode=0o750, exist_ok=True)
     config = pathlib.Path('/etc/cloud-game')
     trusted_directory(config)
-    write(config / 'vm.json', (SOURCE / 'deploy/vm.example.json').read_text(), 0o600)
+    vm = {'templateReviewed': True, 'profile': 'software' if software else 'vfio',
+          'memoryMiB': 2048 if software else 8192, 'cpus': 2 if software else 4,
+          'gpuDevices': [] if software else candidates[0]['devices']}
+    write(config / 'vm.json', json.dumps(vm, indent=2), 0o600)
     write(config / 'host.env', f'CG_ORIGIN=https://{dns}\nCG_STREAM_HOST={address}\n', 0o600)
     for name in UNITS:
         content = (SOURCE / 'deploy' / name).read_text().replace('ExecStart=/usr/bin/node ', 'ExecStart=/opt/cloud-game/runtime/node ')
@@ -125,13 +137,16 @@ def install():
     # Background HTTPS stays inside the tailnet; no Funnel or router port is enabled.
     run('tailscale', 'serve', '--bg', '--https=443', 'http://127.0.0.1:8787')
     print(json.dumps({'url': 'https://' + dns, 'image': str(base),
-        'state': 'blocked until GPU configuration and hardware review',
-        'next': 'Configure GPU/IOMMU em /etc/cloud-game/vm.json e faça a revisão pelo painel.'}))
+        'profile': vm['profile'], 'state': 'installed; HOST recovery determines availability',
+        'next': 'Crie o administrador no endereço privado e consulte o diagnóstico. O perfil software tem desempenho limitado e não valida GPU física.'}))
 
 
 if __name__ == '__main__':
     try:
-        install()
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('--software', action='store_true', help='VM isolada com vídeo/encoding por CPU para validação, sem passthrough.')
+        args = parser.parse_args()
+        install(args.software)
     except Exception as error:
         print(str(error), file=sys.stderr)
         sys.exit(1)

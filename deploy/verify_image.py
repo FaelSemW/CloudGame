@@ -58,7 +58,8 @@ def verify(image, directory):
     with (directory / 'boot.log').open('wb') as log:
         process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
         try:
-            for _ in range(120):
+            deadline = time.monotonic() + 300
+            while time.monotonic() < deadline:
                 if process.poll() is not None: raise RuntimeError('Verification VM exited unexpectedly')
                 try:
                     status = json.loads(execute(channel, '/usr/local/libexec/cloud-game-guest', ['status']))

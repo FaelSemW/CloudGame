@@ -28,6 +28,23 @@ guest_spec.loader.exec_module(guest_adapter)
 
 
 class PolicyTests(unittest.TestCase):
+    def test_software_vm_has_no_passthrough_or_public_display_listener(self):
+        config = {'profile': 'software', 'memoryMiB': 2048, 'cpus': 2, 'gpuDevices': []}
+        xml = ET.fromstring(helper.domain_xml(config, SID))
+        self.assertIsNone(xml.find('devices/hostdev'))
+        self.assertIsNone(xml.find('devices/filesystem'))
+        self.assertEqual(xml.find('devices/graphics/listen').attrib, {'type': 'none'})
+        self.assertEqual(xml.find('devices/video/model').get('type'), 'vga')
+
+    def test_swap_allows_only_zram_without_writeback(self):
+        for device, backing, allowed in [('/dev/zram0', 'none', True), ('/dev/zram0', '/dev/sda', False), ('/swapfile', 'none', False)]:
+            def read(path, *args, **kwargs):
+                return 'Filename Type Size Used Priority\n' + device + ' partition 100 0 100\n' if str(path).replace('\\', '/') == '/proc/swaps' else backing
+            with patch.object(pathlib.Path, 'read_text', read), patch.object(pathlib.Path, 'exists', return_value=True):
+                if allowed: helper.assert_memory_only_swap()
+                else:
+                    with self.assertRaises(RuntimeError): helper.assert_memory_only_swap()
+
     def test_pairing_binds_pin_to_upstream_request_id(self):
         responses = [{'pairings': []}, {'pairings': [{'id': 'b'*32}]}, {'status': True}]
         with patch.object(sys, 'argv', ['cloud-game-guest', 'pair']), patch.object(sys, 'stdin', io.StringIO('1234')), patch.object(guest_adapter, 'api', side_effect=responses) as api, patch.object(guest_adapter.time, 'sleep'):

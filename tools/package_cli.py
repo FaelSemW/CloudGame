@@ -27,7 +27,7 @@ def unpack(destination):
             target.write_bytes(content)
 
 
-def doctor():
+def doctor(software=False):
     release = Path('/etc/os-release')
     bazzite = release.exists() and 'bazzite' in release.read_text().lower()
     requirements = ('python3', 'virsh', 'qemu-img', 'qemu-system-x86_64', 'nft', 'tailscale', 'sudo', 'restorecon', 'semanage')
@@ -36,17 +36,19 @@ def doctor():
               'tools': {name: bool(shutil.which(name)) for name in requirements},
               'template': Path('/var/lib/cloudgame/base.qcow2').is_file(),
               'note': 'Esta verificação não comprova GPU, isolamento ou streaming. Consulte docs/ACCEPTANCE.md.'}
+    result['profile'] = 'software' if software else 'vfio'
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0 if bazzite and result['kvm'] and all(result['tools'].values()) else 2
+    return 0 if bazzite and (software or result['kvm']) and all(result['tools'].values()) else 2
 
 
 def main():
     parser = argparse.ArgumentParser(description='Cloud Game 0.1 — pacote de avaliação, streaming ainda não homologado.')
     parser.add_argument('command', choices=['verify', 'doctor', 'install', 'run', 'logs'])
     parser.add_argument('--lab', action='store_true', help='Instala apenas o controle local; streaming bloqueado explicitamente.')
+    parser.add_argument('--software', action='store_true', help='VM isolada com renderização/encoding por CPU; desempenho limitado, sem passthrough.')
     args = parser.parse_args()
     if args.command == 'doctor':
-        return doctor()
+        return doctor(args.software)
     lab = Path.home() / '.local/share/cloud-game-lab'
     if args.command == 'logs':
         return subprocess.call(['journalctl', '-u', 'cloud-game', '-b', '--no-pager'])
@@ -77,11 +79,11 @@ def main():
             shutil.copytree(source, lab)
             print('Controle local instalado. Streaming indisponível neste modo.')
         else:
-            if doctor() != 0:
+            if doctor(args.software) != 0:
                 raise RuntimeError('Pré-requisitos ausentes. Use install --lab para testar o painel na VM; consulte docs/BAZZITE.md para o HOST.')
             if os.geteuid() != 0:
                 raise RuntimeError('Para o HOST de produção use: sudo python3 cloud-game.pyz install')
-            return subprocess.call([sys.executable, str(source / 'deploy/install_host.py')])
+            return subprocess.call([sys.executable, str(source / 'deploy/install_host.py')] + (['--software'] if args.software else []))
     return subprocess.call([sys.executable, str(Path(sys.argv[0]).resolve()), 'run'])
 
 

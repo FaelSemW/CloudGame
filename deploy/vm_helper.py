@@ -50,12 +50,17 @@ def configuration():
     c = json.loads(CONFIG.read_text())
     if c.get('templateReviewed') is not True:
         raise RuntimeError('A imagem-base precisa passar pela revisão descrita em docs/BAZZITE.md.')
-    if not isinstance(c.get('memoryMiB'), int) or not 4096 <= c['memoryMiB'] <= 65536:
+    profile = c.get('profile', 'vfio')
+    if profile not in ('vfio', 'software'):
+        raise RuntimeError('Perfil de virtualização inválido.')
+    if not isinstance(c.get('memoryMiB'), int) or not (2048 if profile == 'software' else 4096) <= c['memoryMiB'] <= 65536:
         raise RuntimeError('Memória inválida.')
     if not isinstance(c.get('cpus'), int) or not 2 <= c['cpus'] <= 32:
         raise RuntimeError('Número de CPUs inválido.')
     devices = c.get('gpuDevices', [])
-    if not devices or not all(re.fullmatch(r'0000:[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]', d) for d in devices):
+    if profile == 'software':
+        if devices != []: raise RuntimeError('Perfil software não pode repassar dispositivos físicos.')
+    elif not devices or not all(isinstance(d, str) and re.fullmatch(r'0000:[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]', d) for d in devices):
         raise RuntimeError('Informe a GPU dedicada e todas as funções do seu grupo IOMMU.')
     return c
 
@@ -91,20 +96,29 @@ def domains():
     return [x for x in run('virsh', '-c', 'qemu:///system', 'list', '--all', '--name').splitlines() if x.startswith('cg-')]
 
 
+def assert_memory_only_swap():
+    for entry in pathlib.Path('/proc/swaps').read_text().splitlines()[1:]:
+        device = entry.split()[0]
+        if not re.fullmatch(r'/dev/zram[0-9]+', device):
+            raise RuntimeError('Swap persistente não é permitido para sessões temporárias.')
+        backing = pathlib.Path('/sys/block') / pathlib.Path(device).name / 'backing_dev'
+        if not backing.exists() or backing.read_text().strip() != 'none':
+            raise RuntimeError('Zram com writeback ou configuração desconhecida não é permitido.')
+
+
 def assert_volatile():
     trusted(VOL, True)
     info = json.loads(run('findmnt', '--json', '--mountpoint', str(VOL), '-o', 'TARGET,FSTYPE'))['filesystems']
     if len(info) != 1 or info[0]['target'] != str(VOL) or info[0]['fstype'] != 'tmpfs':
         raise RuntimeError('O volume de sessões precisa ser um tmpfs dedicado.')
-    if len(pathlib.Path('/proc/swaps').read_text().splitlines()) > 1:
-        raise RuntimeError('Desative todo swap antes de usar sessões em RAM (inclusive zram nesta versão).')
+    assert_memory_only_swap()
 
 
 def doctor():
     c = configuration()
     if 'bazzite' not in pathlib.Path('/etc/os-release').read_text().lower():
         raise RuntimeError('Esta versão do controlador exige Bazzite no HOST.')
-    if not pathlib.Path('/dev/kvm').exists():
+    if c.get('profile', 'vfio') == 'vfio' and not pathlib.Path('/dev/kvm').exists():
         raise RuntimeError('KVM não disponível.')
     if 'pcie_acs_override=' in pathlib.Path('/proc/cmdline').read_text():
         raise RuntimeError('ACS override não é aceito como fronteira IOMMU segura.')
@@ -135,7 +149,9 @@ def doctor():
         raise RuntimeError('Encaminhamento IPv4 precisa estar habilitado.')
     if not pathlib.Path('/sys/class/net/' + BRIDGE).exists():
         raise RuntimeError('Bridge cgbr0 ausente. Execute o instalador.')
-    return {'ok': True, 'tailscale': address, 'gpuDevices': c['gpuDevices'], 'memoryMiB': c['memoryMiB'], 'isolation': 'KVM + qcow2 em tmpfs sem swap'}
+    return {'ok': True, 'tailscale': address, 'gpuDevices': c['gpuDevices'], 'memoryMiB': c['memoryMiB'],
+            'profile': c.get('profile', 'vfio'), 'isolation': 'VM QEMU + qcow2 em tmpfs sem swap',
+            'warning': 'Perfil software: desempenho limitado; GPU física não validada.' if c.get('profile') == 'software' else ''}
 
 
 def network(peer=None):
@@ -184,12 +200,17 @@ def network(peer=None):
 
 
 def domain_xml(c, sid):
-    root = ET.Element('domain', type='kvm')
+    software = c.get('profile') == 'software'
+    accelerated = not software or pathlib.Path('/dev/kvm').exists()
+    root = ET.Element('domain', type='kvm' if accelerated else 'qemu')
     ET.SubElement(root, 'name').text = 'cg-' + sid
     ET.SubElement(root, 'uuid').text = sid
     ET.SubElement(root, 'memory', unit='MiB').text = str(c['memoryMiB'])
     ET.SubElement(root, 'vcpu').text = str(c['cpus'])
-    ET.SubElement(root, 'cpu', mode='host-passthrough')
+    if accelerated:
+        ET.SubElement(root, 'cpu', mode='host-passthrough')
+    else:
+        ET.SubElement(root, 'cpu', mode='maximum')
     osel = ET.SubElement(root, 'os')
     ET.SubElement(osel, 'type', arch='x86_64', machine='q35').text = 'hvm'
     ET.SubElement(osel, 'boot', dev='hd')
@@ -211,7 +232,10 @@ def domain_xml(c, sid):
     ET.SubElement(interface, 'model', type='virtio')
     channel = ET.SubElement(dev, 'channel', type='unix')
     ET.SubElement(channel, 'target', type='virtio', name='org.qemu.guest_agent.0')
-    ET.SubElement(dev, 'video').append(ET.Element('model', type='none'))
+    ET.SubElement(dev, 'video').append(ET.Element('model', type='vga' if software else 'none'))
+    if software:
+        # A virtual framebuffer without a network-accessible SPICE listener.
+        ET.SubElement(ET.SubElement(dev, 'graphics', type='spice'), 'listen', type='none')
     for d in c['gpuDevices']:
         domain, bus, slotfn = d.split(':')
         slot, function = slotfn.split('.')
