@@ -78,6 +78,7 @@ def verify(image, directory, timeout=300, client=None):
                         'g={x.gr_name for x in grp.getgrall() if "player" in x.gr_mem or x.gr_gid==p.pw_gid}; '
                         'assert not g & {"sudo","wheel","docker","libvirt","disk","lxd"}; '
                         'assert not pathlib.Path("/home/player/.steam").exists(); '
+                        'assert not pathlib.Path("/home/player/.cloudgame-session-check").exists(); '
                         'assert pathlib.Path("/var/lib/cloudgame-image-ready").is_file(); '
                         'assert not any(x in {"9p","virtiofs","nfs","cifs"} for x in '
                         '[line.split()[2] for line in pathlib.Path("/proc/mounts").read_text().splitlines()]); '
@@ -111,6 +112,8 @@ def verify(image, directory, timeout=300, client=None):
                 raise RuntimeError('Guest verification failed: ' + last)
             transport = None
             if client:
+                execute(channel, '/usr/bin/python3', ['-c',
+                    'from pathlib import Path; Path("/home/player/.cloudgame-session-check").write_text("discard this session")'])
                 import sys
                 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
                 from smoke_stream import check
@@ -136,3 +139,11 @@ if __name__ == '__main__':
     parser.add_argument('--client', type=Path, help='CI-only native transport verification')
     args = parser.parse_args()
     verify(args.image, args.directory, args.timeout, args.client)
+    if args.client:
+        # A new boot must not retain a file written during the previous real stream.
+        cleanup = args.directory.with_name(args.directory.name + '-clean')
+        verify(args.image, cleanup, args.timeout)
+        evidence = args.directory / 'verification.json'
+        value = json.loads(evidence.read_text())
+        value['discardedSessionFileAbsentOnNextBoot'] = True
+        evidence.write_text(json.dumps(value, indent=2))

@@ -165,7 +165,7 @@ def network(peer=None):
     nat = ''
     if peer:
         blocked = ''
-        outbound = f'iifname "{BRIDGE}" ip daddr {peer} udp accept'
+        outbound = f'iifname "{BRIDGE}" ip daddr {peer} ip protocol udp accept'
         outbound += f'\n iifname "{BRIDGE}" ip daddr {peer} ct state established,related accept'
         peer_return = f'iifname "tailscale0" oifname "{BRIDGE}" ip saddr {peer} ct state established,related accept'
         host = peer_ip(run('tailscale', 'ip', '-4').splitlines()[0])
