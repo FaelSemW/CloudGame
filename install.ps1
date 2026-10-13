@@ -1,7 +1,10 @@
-# Cloud Game desktop installer. Requires a published, complete Windows release.
+# Cloud Game integrated desktop preview. The HOST has separate prerequisites.
 $ErrorActionPreference = 'Stop'
 $repository = 'FaelSemW/CloudGame'
-$release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repository/releases/latest" -Headers @{'User-Agent'='CloudGame-Installer'}
+$version = 'v0.1.0-desktop-preview.1'
+$release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repository/releases/tags/$version" -Headers @{'User-Agent'='CloudGame-Installer'}
+if ($release.draft -or $release.tag_name -ne $version) { throw 'Versão de distribuição inválida.' }
+Write-Host 'CloudGame desktop integrado — versão de testes. Configure o HOST Bazzite antes de jogar.'
 $setup = @($release.assets | Where-Object name -EQ 'CloudGame-Setup.exe')
 $checksums = @($release.assets | Where-Object name -EQ 'SHA256SUMS')
 if ($setup.Count -ne 1 -or $checksums.Count -ne 1) {

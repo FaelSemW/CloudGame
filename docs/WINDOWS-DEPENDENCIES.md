@@ -39,3 +39,9 @@ Não há licença comercial Qt nem certificado de assinatura Windows configurado
 Referências: [licenciamento Qt](https://doc.qt.io/qt-6/licensing.html),
 [fontes oficiais Qt](https://download.qt.io/official_releases/qt/6.12/6.12.0/single/),
 [fontes das dependências Moonlight v19](https://github.com/moonlight-stream/moonlight-qt-deps/tree/v19).
+
+## Runtimes conferidos em 13/10/2026
+
+Na [execução 38469440482](https://github.com/FaelSemW/CloudGame/actions/runs/38469440482), `tools/verify_windows_runtime.ps1` comparou por SHA-256 as dez DLLs Microsoft do cliente com arquivos não modificados de `VC/Redist` de uma instalação completa, não preview, do Visual Studio. O manifesto `runtime-provenance.json` registra versão 14.51.36247.0, toolchain 18.10.12217.157, caminho REDIST e hash de cada DLL. Arquivos debug_nonredist são recusados. Instalação, abertura e desinstalação do pacote também passaram.
+
+A lista oficial de redistribuição do [Visual Studio 2026](https://learn.microsoft.com/en-us/visualstudio/releases/2026/redistribution) deve acompanhar a revisão de qualquer troca de toolchain; essa comparação não autoriza redistribuir qualquer arquivo da instalação Visual Studio. O pacote conserva os avisos Qt/dependências e os oito textos de licença do conjunto shaderc/Vulkan SDK 1.4.363.0, com proveniência em `licenses/vulkan-sdk-1.4.363.0/`. A publicação ainda precisa fornecer os arquivos de fontes correspondentes ao lado dos binários.

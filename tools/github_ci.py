@@ -23,7 +23,7 @@ class SafeRedirect(urllib.request.HTTPRedirectHandler):
         return redirected
 
 
-def request(path, method='GET', body=None):
+def credential():
     env = dict(os.environ, GIT_TERMINAL_PROMPT='0', GCM_INTERACTIVE='never')
     auth = subprocess.run(['git', 'credential', 'fill'], cwd=ROOT,
                           input='protocol=https\nhost=github.com\n\n', text=True,
@@ -34,6 +34,11 @@ def request(path, method='GET', body=None):
     token = fields.get('password')
     if not token:
         raise RuntimeError('Git não retornou credencial utilizável.')
+    return token
+
+
+def request(path, method='GET', body=None):
+    token = credential()
     url = 'https://api.github.com/repos/' + REPO + '/' + path
     req = urllib.request.Request(url, method=method,
         data=json.dumps(body).encode() if body is not None else None,

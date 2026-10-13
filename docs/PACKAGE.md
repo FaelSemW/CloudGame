@@ -1,34 +1,35 @@
-# Pacote de avaliação 0.1
+# Instalação do HOST e clientes nativos
 
-Este pacote instala o controle HOST e sua interface web. **Não é a V1 completa:** não contém APK, cliente Windows nativo ou Moonlight embutido compilado. Streaming e descarte via GPU ainda precisam de homologação em hardware. Não use para disponibilizar acesso a terceiros antes dessa validação.
+O pacote HOST atual inclui o serviço de controle, painel, isolamento QEMU/libvirt, provisionador automático de Ubuntu/Xfce/Steam/Sunshine e descarte das sessões. Sunshine é baixado da release oficial com SHA-256 fixado durante a preparação. Não é necessário copiar o pacote manualmente para a máquina.
 
-## Testar agora no Bazzite em VirtualBox
+## HOST Bazzite
 
-Copie `cloud-game.pyz` para Downloads dentro do Bazzite. Abra um terminal nessa pasta e execute, como usuário comum:
-
-```sh
-python3 cloud-game.pyz install --lab
-```
-
-O comando verifica o pacote, baixa Node oficial (internet necessária), preserva a licença, instala em `~/.local/share/cloud-game-lab` e inicia o servidor. Abra **http://127.0.0.1:8787**, informe o código mostrado no terminal e crie seu administrador. A senha é da plataforma, nunca da Steam. É possível testar login, administração de usuários e registros. O estado bloqueado é esperado: laboratório não executa sessões nem simula streaming.
-
-Mantenha o terminal aberto. Ctrl+C encerra o servidor. Nas próximas vezes:
+Depois de preparar os pré-requisitos em [BAZZITE.md](BAZZITE.md), execute no terminal do Bazzite:
 
 ```sh
-python3 cloud-game.pyz run
+curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh
 ```
 
-Dados e contas persistem na pasta `data` da instalação. Reinstalações são recusadas para preservar dados. O modo laboratório não configura inicialização automática, rede privada ou privilégios administrativos.
-
-## HOST de produção — preparação obrigatória
+Para teste em VM sem GPU dedicada:
 
 ```sh
-python3 cloud-game.pyz doctor
-sudo python3 cloud-game.pyz install
+curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh -s -- --software
 ```
 
-Antes, siga `docs/BAZZITE.md` no projeto: libvirt/KVM, GPU dedicada com IOMMU/VFIO, imagem-base limpa com Sunshine, Tailscale e ferramentas do sistema. O instalador não consegue transformar a GPU virtual do VirtualBox em GPU dedicada nem preparar automaticamente uma imagem de jogos licenciados. Pré-requisitos ausentes interrompem a instalação; não há fallback inseguro para o desktop do proprietário. O serviço de produção possui inicialização automática, mas permanece bloqueado até a preparação e verificação da imagem. Falhas parciais preservam arquivos e exigem revisão administrativa.
+O instalador verifica a integridade, confere ferramentas, pede elevação administrativa, prepara a imagem e valida um novo boot antes de configurar os serviços. O perfil software transmite vídeo real usando CPU, com desempenho limitado. A VM de testes precisa ter memória e espaço suficientes para executar uma segunda VM; não equivale ao desempenho de um PC com GPU.
 
-## Verificação
+**Limites atuais:** ferramentas nativas libvirt/QEMU, Tailscale conectado e HTTPS da tailnet ainda precisam estar disponíveis previamente. A CLI recusa conflitos e preserva instalações existentes; não implementa atualização automática. Instalação em Bazzite, GPU física e convivência com políticas particulares de firewall continuam pendentes de homologação. O pipeline já comprovou provisionamento, streaming nativo Linux por CPU e descarte entre boots.
 
-`python3 cloud-game.pyz verify` verifica todos os arquivos internos. O SHA-256 externo está em `SHA256SUMS`; não é uma assinatura de autoria. `doctor` retorna código 2 quando faltam pré-requisitos. O pacote não publica portas na internet nem usa serviços pagos. Para homologação use `docs/ACCEPTANCE.md`.
+A imagem não inclui jogos nem credenciais Steam. Jogos autorizados são preparados na base persistente conforme BAZZITE.md; login do jogador acontece apenas na interface oficial da Steam dentro da sessão.
+
+## Clientes
+
+Windows e Linux incorporam o motor Moonlight no próprio executável. Android incorpora o core no APK. Os binários estão nos artefatos dos builds do GitHub Actions; a release pública com binários e fontes correspondentes ainda está em preparação. O script `install.ps1` depende dessa release e não deve ser apresentado como download público disponível antes de sua publicação.
+
+O painel web do HOST administra contas e sessões; ele não é um player de vídeo. Os clientes nativos são os players.
+
+## Verificação e recuperação
+
+`python3 cloud-game.pyz verify` confere os arquivos internos. O checksum externo não é assinatura de autoria. `doctor --software` permite conferir o perfil de testes sem exigir KVM. Consulte [ACCEPTANCE.md](ACCEPTANCE.md) para homologação e [BAZZITE.md](BAZZITE.md) para recuperação. Uma limpeza incompleta mantém o HOST bloqueado.
+
+O modo antigo `install --lab` permanece disponível somente para desenvolver o painel e não transmite jogos; não é o procedimento de instalação do produto.
