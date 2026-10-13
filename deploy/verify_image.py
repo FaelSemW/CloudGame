@@ -124,6 +124,12 @@ def verify(image, directory, timeout=300, client=None):
                 'physicalGpuValidated': False}, indent=2))
         finally:
             if process.poll() is None:
+                try:
+                    diagnostic = execute(channel, '/usr/bin/journalctl', ['-u', 'cloud-game-sunshine', '-b', '--no-pager', '-n', '200'])
+                    (directory / 'sunshine.log').write_text(diagnostic)
+                except Exception:
+                    pass
+            if process.poll() is None:
                 process.terminate()
                 try: process.wait(timeout=10)
                 except subprocess.TimeoutExpired: process.kill(); process.wait()
