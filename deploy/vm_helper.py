@@ -160,11 +160,14 @@ def network(peer=None):
     prefix = 'delete table inet cloud_game\n' if 'table inet cloud_game' in tables.splitlines() else ''
     inbound = ''
     outbound = ''
+    peer_return = ''
     blocked = f'iifname "{BRIDGE}" drop\n oifname "{BRIDGE}" drop'
     nat = ''
     if peer:
         blocked = ''
         outbound = f'iifname "{BRIDGE}" ip daddr {peer} udp accept'
+        outbound += f'\n iifname "{BRIDGE}" ip daddr {peer} ct state established,related accept'
+        peer_return = f'iifname "tailscale0" oifname "{BRIDGE}" ip saddr {peer} ct state established,related accept'
         host = peer_ip(run('tailscale', 'ip', '-4').splitlines()[0])
         inbound = f'iifname "tailscale0" ip saddr {peer} ip daddr {GUEST} tcp dport {{47984,47989,48010}} accept\n iifname "tailscale0" ip saddr {peer} ip daddr {GUEST} udp dport {{47998,47999,48000,48002,48010}} accept'
         nat = f'''chain prerouting {{ type nat hook prerouting priority dstnat; policy accept;
@@ -183,11 +186,13 @@ def network(peer=None):
         iifname "{BRIDGE}" meta nfproto ipv6 drop
         oifname "{BRIDGE}" meta nfproto ipv6 drop
         iifname "{BRIDGE}" ip saddr != {GUEST} drop
-        iifname "{BRIDGE}" ct state established,related accept
         {outbound}
         iifname "{BRIDGE}" ip daddr @private4 drop
+        iifname "{BRIDGE}" ct state established,related accept
         iifname "{BRIDGE}" accept
         {inbound}
+        {peer_return}
+        oifname "{BRIDGE}" ip saddr @private4 drop
         oifname "{BRIDGE}" ct state established,related accept
         oifname "{BRIDGE}" drop
       }}

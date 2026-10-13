@@ -72,15 +72,20 @@ class PolicyTests(unittest.TestCase):
             self.assertEqual(api.call_count, 1)
 
     def test_sunshine_ready_before_first_connection_marker(self):
-        journal = types.SimpleNamespace(returncode=1, stdout='', stderr='')
+        journal = types.SimpleNamespace(returncode=0, stdout='Info: Found H.264 encoder: libx264 [software]', stderr='')
         with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps':[{'name':'Desktop'}], 'pairings': []}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
             self.assertEqual(guest_adapter.main(), {'ready':True, 'connected':False})
 
     def test_sunshine_multiple_connection_markers_fail_closed(self):
-        journal = types.SimpleNamespace(returncode=0, stdout='Info: CLIENT CONNECTED\nInfo: CLIENT CONNECTED', stderr='')
+        journal = types.SimpleNamespace(returncode=0, stdout='Info: Found H.264 encoder: libx264 [software]\nInfo: CLIENT CONNECTED\nInfo: CLIENT CONNECTED', stderr='')
         with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps':[{'name':'Desktop'}], 'pairings': []}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
             with self.assertRaises(RuntimeError):
                 guest_adapter.main()
+
+    def test_sunshine_api_without_capture_encoder_is_not_ready(self):
+        journal = types.SimpleNamespace(returncode=1, stdout='', stderr='')
+        with patch.object(sys, 'argv', ['cloud-game-guest', 'status']), patch.object(guest_adapter, 'api', return_value={'apps': [{'name': 'Desktop'}], 'pairings': []}), patch.object(guest_adapter.subprocess, 'check_output', return_value='a'*32), patch.object(guest_adapter.subprocess, 'run', return_value=journal):
+            self.assertEqual(guest_adapter.main(), {'ready': False, 'connected': False})
 
     def test_rejects_client_paths_and_command_injection(self):
         for value in ('../../owner', '/home/owner', SID + ';id', '', None, 'A' * 36):
@@ -132,6 +137,10 @@ class PolicyTests(unittest.TestCase):
         self.assertIn('ip saddr 100.100.1.2 ip daddr 100.100.1.1',rules)
         self.assertIn('meta nfproto ipv6 drop',rules)
         self.assertIn('ip daddr @private4 drop',rules)
+        forward = rules.split('chain forward')[1]
+        # An old player's conntrack entry must not bypass the next reservation.
+        self.assertLess(forward.index('oifname "cgbr0" ip saddr @private4 drop'), forward.index('oifname "cgbr0" ct state established'))
+        self.assertLess(forward.index('iifname "cgbr0" ip daddr @private4 drop'), forward.index('iifname "cgbr0" ct state established'))
 
     def test_pair_mark_is_persisted_before_side_effect(self):
         events = []
