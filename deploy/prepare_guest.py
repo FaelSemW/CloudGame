@@ -85,6 +85,8 @@ def main():
     libexec.mkdir(exist_ok=True)
     shutil.copyfile(HERE / 'cloud-game-guest', libexec / 'cloud-game-guest')
     (libexec / 'cloud-game-guest').chmod(0o755)
+    shutil.copyfile(HERE / 'wait_desktop.py', libexec / 'cloud-game-wait-desktop.py')
+    (libexec / 'cloud-game-wait-desktop.py').chmod(0o644)
     service = pathlib.Path('/etc/systemd/system/cloud-game-sunshine.service')
     if service.exists():
         sys.exit('Unidade de serviço existente preservada.')

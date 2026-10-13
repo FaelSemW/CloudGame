@@ -10,7 +10,11 @@ Environment=HOME=/home/player
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/player/.Xauthority
 Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=XDG_SESSION_TYPE=x11
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+ExecStartPre=/usr/bin/python3 /usr/local/libexec/cloud-game-wait-desktop.py
 ExecStart=/usr/bin/sunshine /home/player/.config/sunshine/sunshine.conf
+TimeoutStartSec=90
 Restart=on-failure
 RestartSec=3
 UMask=0077

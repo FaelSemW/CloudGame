@@ -30,8 +30,8 @@ def main():
         raise RuntimeError('Refusing to provision a previously configured image')
     run('dpkg', '--add-architecture', 'i386')
     run('apt-get', 'update')
-    run('apt-get', 'install', '-y', '--no-install-recommends', 'xfce4', 'xorg', 'lightdm',
-        'dbus-x11', 'pulseaudio', 'qemu-guest-agent', 'curl', 'ca-certificates',
+    run('apt-get', 'install', '-y', '--no-install-recommends', 'xfce4', 'xorg', 'x11-utils', 'lightdm',
+        'dbus-x11', 'pulseaudio', 'pulseaudio-utils', 'qemu-guest-agent', 'curl', 'ca-certificates',
         'mesa-va-drivers', 'mesa-vulkan-drivers', 'libgl1-mesa-dri', 'linux-firmware',
         'linux-generic', 'steam-installer')
     lock = json.loads((HERE / 'image-lock.json').read_text())['sunshine']

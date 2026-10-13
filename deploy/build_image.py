@@ -43,7 +43,7 @@ def download(url, digest, path):
 def configuration():
     files = []
     for name in ('provision_image.py', 'prepare_guest.py', 'cloud-game-guest',
-                 'cloud-game-sunshine.service', 'sunshine.conf', 'apps.json', 'image-lock.json'):
+                 'cloud-game-sunshine.service', 'sunshine.conf', 'apps.json', 'image-lock.json', 'wait_desktop.py'):
         files.append({'path': '/opt/cloud-game-image/' + name, 'permissions': '0600',
                       'owner': 'root:root', 'content': (HERE / name).read_text(encoding='utf-8')})
     return {
