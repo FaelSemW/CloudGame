@@ -32,7 +32,8 @@ def main():
     run('apt-get', 'update')
     run('apt-get', 'install', '-y', '--no-install-recommends', 'xfce4', 'xorg', 'lightdm',
         'dbus-x11', 'pulseaudio', 'qemu-guest-agent', 'curl', 'ca-certificates',
-        'mesa-va-drivers', 'mesa-vulkan-drivers', 'libgl1-mesa-dri', 'linux-firmware', 'steam-installer')
+        'mesa-va-drivers', 'mesa-vulkan-drivers', 'libgl1-mesa-dri', 'linux-firmware',
+        'linux-generic', 'steam-installer')
     lock = json.loads((HERE / 'image-lock.json').read_text())['sunshine']
     package = Path('/var/tmp/cloudgame-sunshine.deb')
     # curl refuses HTTPS-to-HTTP redirects; the fixed upstream checksum is mandatory.
