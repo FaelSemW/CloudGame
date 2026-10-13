@@ -15,6 +15,9 @@ jobs:
           run-id: 38316442440
           github-token: ${{ github.token }}
           path: build/native-client
+      - name: Verify Microsoft runtime redistribution provenance
+        shell: pwsh
+        run: ./tools/verify_windows_runtime.ps1
       - name: Package verified native binary and current notices
         shell: pwsh
         run: |

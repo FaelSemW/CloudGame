@@ -39,3 +39,10 @@ A [execução 38270190388](https://github.com/FaelSemW/CloudGame/actions/runs/38
 Os 719 avisos originais de desktop foram posteriormente preservados em `licenses/windows-runtime-notices.zip` (commit 6560d9f), para inclusão nas próximas compilações do instalador; o artefato da execução acima antecede essa inclusão. Os fontes Qt oficiais tiveram SHA-256 conferido. O arquivo local de fontes Windows/dependências da revisão 533f2a7 contém 63224 arquivos, SHA-256 `41291291b9f9309854734b6c3f0e740b805d3cd46f28037b1e06a44b0072e218`; ele corresponde à revisão anterior, não deve ser usado como fonte correspondente do binário 56ab70d.
 
 Pendências concretas: provisionamento automático da imagem Sunshine e dependências do HOST; revisão final e publicação dos fontes/avisos dos runtimes redistribuídos junto aos binários correspondentes; assinatura de produção Android; testes reais Android/desktop e Bazzite/GPU. Não há release completa disponível e os scripts que consultam releases não estão prontos para uso público.
+
+
+## Streaming real e descarte: 13/10/2026
+
+A [execução 38347361268](https://github.com/FaelSemW/CloudGame/actions/runs/38347361268) passou: pareamento nativo, Sunshine conectado, frames H.264 decodificados/apresentados e arquivo temporário ausente após descarte e novo boot. A captura mostra o desktop Xfce real transmitido pela VM. O cliente usa o motor Moonlight incorporado, sem aplicativo externo. A correção de inicialização aguarda X11 e PulseAudio antes de iniciar Sunshine.
+
+Essa evidência usa a CLI nativa Linux, não o login/reserva da interface CloudGame nem Android, GPU física ou jogos. O provisionamento automático da imagem está implementado e foi executado; os pré-requisitos e a rede do HOST Bazzite continuam pendentes de homologação. Os clientes atuais foram compilados na [execução 38316442440](https://github.com/FaelSemW/CloudGame/actions/runs/38316442440); o instalador Windows com os avisos Vulkan adicionais passou na [execução 38348082662](https://github.com/FaelSemW/CloudGame/actions/runs/38348082662).

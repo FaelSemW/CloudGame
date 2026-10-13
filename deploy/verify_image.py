@@ -135,7 +135,8 @@ def verify(image, directory, timeout=300, client=None):
                 except subprocess.TimeoutExpired: process.kill(); process.wait()
     # Remove only our generated disposable disk after QEMU is confirmed stopped.
     overlay.unlink()
-    print('Second boot, Sunshine API and guest isolation checks passed; streaming remains unverified.')
+    print('Second boot, Sunshine API and guest isolation checks passed.' +
+          (' Native video streaming validated.' if client else ' Streaming was not exercised in this boot.'))
 
 
 if __name__ == '__main__':
