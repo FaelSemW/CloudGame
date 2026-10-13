@@ -1,0 +1,36 @@
+name: Package verified Windows client with current distribution notices
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: cloud-game-windows-build-internal
+          run-id: 38316442440
+          github-token: ${{ github.token }}
+          path: build/native-client
+      - name: Package verified native binary and current notices
+        shell: pwsh
+        run: |
+          $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $compiler "/DClientDir=$pwd\build\native-client" "/DProjectDir=$pwd" deploy/windows-client.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
+      - name: Verify installation, startup and uninstall in CI
+        shell: pwsh
+        run: ./tools/smoke_windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-game-windows-distribution
+          path: dist/CloudGame-Setup.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloud-game-windows-distribution-startup
+          path: build/windows-smoke/

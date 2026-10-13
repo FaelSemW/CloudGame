@@ -1,0 +1,46 @@
+{
+  "sdk": "1.4.363.0",
+  "versionSource": "https://raw.githubusercontent.com/google/shaderc/75137cca3b41a59b8b3e5c42177da8a9490c042f/known_good.json",
+  "files": {
+    "KhronosGroup-glslang/LICENSE.txt": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/glslang/e1b562a8bed273a02f30b59b66a5d499793cede5/LICENSE.txt",
+      "sha256": "17e70c676e1521ff3e4686f04a2053d93a7e28a33be8de7ec37ab0ff72feb677",
+      "commit": "e1b562a8bed273a02f30b59b66a5d499793cede5"
+    },
+    "abseil-abseil-cpp/LICENSE": {
+      "url": "https://raw.githubusercontent.com/abseil/abseil-cpp/dbf88f932096c7f7714356e919f04749eb87c3e9/LICENSE",
+      "sha256": "c79a7fea0e3cac04cd43f20e7b648e5a0ff8fa5344e644b0ee09ca1162b62747",
+      "commit": "dbf88f932096c7f7714356e919f04749eb87c3e9"
+    },
+    "google-re2/LICENSE": {
+      "url": "https://raw.githubusercontent.com/google/re2/972a15cedd008d846f1a39b2e88ce48d7f166cbd/LICENSE",
+      "sha256": "6040cda75d90b1738292a631d89934c411ef7ffd543c4d6a1b7edfc8edf29449",
+      "commit": "972a15cedd008d846f1a39b2e88ce48d7f166cbd"
+    },
+    "google-effcee/LICENSE": {
+      "url": "https://raw.githubusercontent.com/google/effcee/f8e8a164822d4f65e757bff66bc00e1567959aa0/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "commit": "f8e8a164822d4f65e757bff66bc00e1567959aa0"
+    },
+    "google-googletest/LICENSE": {
+      "url": "https://raw.githubusercontent.com/google/googletest/52eb8108c5bdec04579160ae17225d66034bd723/LICENSE",
+      "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+      "commit": "52eb8108c5bdec04579160ae17225d66034bd723"
+    },
+    "google-shaderc/LICENSE": {
+      "url": "https://raw.githubusercontent.com/google/shaderc/b64fd42c4a2a9d501c47aca5d3571f7673a5e9cc/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "commit": "b64fd42c4a2a9d501c47aca5d3571f7673a5e9cc"
+    },
+    "KhronosGroup-SPIRV-Headers/LICENSE": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/SPIRV-Headers/04fd3caa1e8267e4d95c806cad901181728e1006/LICENSE",
+      "sha256": "ea43b1de38a6f90c488800d66dec1ed671e68cda530266bc96951fb5b6307613",
+      "commit": "04fd3caa1e8267e4d95c806cad901181728e1006"
+    },
+    "KhronosGroup-SPIRV-Tools/LICENSE": {
+      "url": "https://raw.githubusercontent.com/KhronosGroup/SPIRV-Tools/ef96ed763b43b59b33b31b362f09a02b729fa1c9/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "commit": "ef96ed763b43b59b33b31b362f09a02b729fa1c9"
+    }
+  }
+}
