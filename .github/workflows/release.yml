@@ -20,7 +20,8 @@ jobs:
           python-version: '3.12'
       - run: npm test
       - run: npm run check
-      - run: sudo apt-get update && sudo apt-get install -y libvirt-clients libxml2-utils
+      - run: sudo apt-get update && sudo apt-get install -y libvirt-clients libxml2-utils nftables iproute2
+      - run: sudo env GITHUB_ACTIONS=true python3 tools/verify_firewall.py
       - run: python3 tools/package.py
       - run: python3 -m unittest discover -s tests -p 'test_*.py'
       - run: python3 dist/cloud-game.pyz verify
