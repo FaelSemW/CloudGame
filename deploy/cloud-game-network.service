@@ -1,6 +1,7 @@
 [Unit]
 Description=Cloud Game private VM bridge
 Before=cloud-game.service
+After=firewalld.service
 
 [Service]
 Type=oneshot

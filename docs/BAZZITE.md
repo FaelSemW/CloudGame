@@ -105,3 +105,11 @@ Recuperação de senha do único administrador: exige acesso local root. Ainda n
 - [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve)
 
 As referências fundamentam a integração; não substituem teste da combinação exata de hardware/software.
+
+### Associação ao firewalld e conflitos de rede
+
+O serviço de rede identifica sua bridge com o alias `cloud-game-managed-v1` e recusa uma `cgbr0` de outra origem, assim como rotas que sobreponham `10.77.0.0/24`. Em instalação antiga, uma bridge sem esse alias exige revisão administrativa de propriedade; o instalador não a toma automaticamente.
+
+Quando firewalld está ativo, a configuração exige a zona `libvirt` e associa somente `cgbr0` a ela, em runtime e permanentemente. Confere conflitos nas duas configurações antes de escrever. Não executa reload global nem modifica a zona de `tailscale0`. As regras restritivas CloudGame são instaladas antes de ativar a bridge; portas administrativas do guest continuam bloqueadas. Configurações personalizadas, como políticas adicionais ou StrictForwardPorts, podem impedir tráfego e exigem homologação; o script não as desativa.
+
+Referências: [rede e firewalld no libvirt](https://libvirt.org/firewall.html), [comandos de zonas firewalld](https://firewalld.org/documentation/man-pages/firewall-cmd.html). O teste CI de nftables usa namespaces sem firewalld e não comprova essa convivência no Bazzite.

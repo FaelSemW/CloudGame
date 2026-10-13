@@ -13,6 +13,7 @@ if sys.argv[1:] != ['--isolated']:
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'deploy'))
 import vm_helper
+import network_setup
 
 
 def run(*args):
@@ -28,9 +29,11 @@ try:
         run('ip', 'netns', 'add', name); created.append(name)
         run('ip', '-n', name, 'link', 'set', 'lo', 'up')
     guest, peer = names
-    run('ip', 'link', 'add', 'cgbr0', 'type', 'bridge')
-    run('ip', 'addr', 'add', '10.77.0.1/24', 'dev', 'cgbr0')
-    run('ip', 'link', 'set', 'cgbr0', 'up')
+    # This namespace has no firewalld daemon. Exercise the actual bridge setup;
+    # firewalld coexistence must be validated separately on the target HOST.
+    network_setup.firewall_plan = lambda: []
+    network_setup.setup()
+    network_setup.setup()  # An owned bridge is reusable without replacing it.
     for interface, remote, namespace, address in [('cgport', 'eth0', guest, '10.77.0.2/24'), ('tailscale0', 'eth0', peer, '100.100.1.2/24')]:
         run('ip', 'link', 'add', interface, 'type', 'veth', 'peer', 'name', 'cgremote')
         run('ip', 'link', 'set', 'cgremote', 'netns', namespace)

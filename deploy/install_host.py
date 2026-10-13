@@ -54,6 +54,10 @@ def install(software=False):
     missing = [x for x in required if not shutil.which(x)]
     if missing:
         raise RuntimeError('Pré-requisitos ausentes: ' + ', '.join(missing) + '. Consulte docs/BAZZITE.md; não instale pacotes com apt/dnf no HOST.')
+    from network_setup import validate_network, firewall_plan
+    validate_network(json.loads(run('ip', '-details', '-json', 'link', 'show')),
+                     json.loads(run('ip', '-json', '-4', 'route', 'show', 'table', 'all')))
+    firewall_plan()  # Detect conflicts before building a guest or changing host accounts.
     run('virsh', '-c', 'qemu:///system', 'list', '--all')
     info = json.loads(run('tailscale', 'status', '--json'))
     dns = info.get('Self', {}).get('DNSName', '').rstrip('.')
