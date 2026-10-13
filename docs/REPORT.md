@@ -67,6 +67,15 @@ A revisão 56ab70d passou nos três jobs da [execução 38270190388](https://git
 
 ## Etapas restantes
 
-Homologar no Bazzite o provisionamento automático já verificado no CI; preparar HOST com GPU dedicada/IOMMU; configurar Tailscale/HTTPS/firewalld; executar o roteiro ACCEPTANCE.md e corrigir incompatibilidades reais. Concluir avisos/fontes de runtimes redistribuídos, assinatura de produção Android e release pública com checksums. O bootstrap Windows consulta uma release que ainda não existe; não apresentar esse comando como instalador público funcionando. O bootstrap HOST anterior instala somente o controle e não entrega uma imagem de jogos pronta.
+Homologar no Bazzite o provisionamento automático já verificado no CI; preparar HOST com GPU dedicada/IOMMU; configurar Tailscale/HTTPS/firewalld; executar o roteiro ACCEPTANCE.md e corrigir incompatibilidades reais. Concluir avisos/fontes de runtimes redistribuídos, assinatura de produção Android e release pública com checksums. A release desktop preview foi publicada com instaladores, HOST atualizado, checksums e fontes correspondentes. Os downloads públicos e hashes foram conferidos. O bootstrap HOST agora inclui o provisionador da imagem Sunshine/Steam/Xfce; os pré-requisitos nativos e Tailscale ainda devem estar disponíveis.
 
 Os critérios de conclusão fornecidos pelo usuário continuam pendentes onde exigem instalação Bazzite, streaming Android e fluxo completo do desktop, isolamento e descarte verificados no HOST Bazzite real. A aprovação dos testes de controle não encerra esses critérios.
+
+
+## Publicação desktop de 13/10/2026
+
+[Desktop preview 0.1](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.1): 12 assets publicados, incluindo Windows, Ubuntu 24.04, HOST, scripts, checksums, fontes cliente/dependências/Qt/Vulkan e proveniência dos runtimes Microsoft. Downloads públicos do instalador Windows, pacote HOST, checksums e ambos os scripts foram baixados novamente e tiveram seus hashes conferidos. Não foi executado instalador na máquina pessoal do proprietário.
+
+A revisão a32812d passou no CI 38469704981, com 32 testes Python, 23 Node, XML libvirt e rede nftables real. O teste de rede também executou duas vezes a configuração da bridge para verificar reaproveitamento da interface própria. Proteções contra conflito de rota/bridge/zona passaram nos testes; o CI não executou firewalld Bazzite. A revisão de distribuição 2945218 passou no CI 38470256013. Windows passou na auditoria das dez DLLs REDIST e teste de instalação/abertura/desinstalação no CI 38469440482.
+
+A publicação não muda os limites: ainda é necessário testar instalação Bazzite, fluxo completo de autenticação/reserva/streaming, jogos, GPU, controles físicos e recuperação no equipamento do usuário. O usuário optou por realizar esses testes após instalar. Android não foi publicado nesta release; sua auditoria transitiva e assinatura de produção continuam pendentes.

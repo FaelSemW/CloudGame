@@ -6,6 +6,26 @@ HOST Bazzite e clientes Android/desktop com integração dos projetos oficiais S
 
 A pasta recebida estava vazia, sem Git ou código a preservar. Esta implementação inicializou o repositório e não substituiu um produto anterior.
 
+## Instalar a versão desktop de testes
+
+[Downloads: desktop preview 0.1](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.1). Inclui instalador Windows com Moonlight incorporado, cliente Ubuntu 24.04, pacote HOST, checksums e fontes correspondentes. Os downloads públicos foram conferidos após a publicação.
+
+Windows, no PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.ps1 | iex
+```
+
+HOST Bazzite em VM, no terminal do Bazzite:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh -s -- --software
+```
+
+O perfil por CPU é para testes e tem desempenho limitado. **Antes do HOST:** ferramentas nativas QEMU/libvirt e Tailscale/HTTPS precisam estar disponíveis; consulte [pré-requisitos e instalação](docs/BAZZITE.md). O instalador baixa e prepara Sunshine/Steam/Xfce em uma VM isolada. Não inclui jogos. Para GPU dedicada já preparada para VFIO, remova `--software`.
+
+A release é de testes, não homologação em Bazzite/GPU. Android continua nos artefatos de desenvolvimento e não integra esta release desktop. Instalações existentes são preservadas; não há atualização automática.
+
 ## Executar o controle local
 
 Requer Node.js 22.13+ (testado com 22.23.3). Não há dependências npm externas nem etapa de compilação.

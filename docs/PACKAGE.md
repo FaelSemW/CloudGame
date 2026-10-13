@@ -24,7 +24,7 @@ A imagem não inclui jogos nem credenciais Steam. Jogos autorizados são prepara
 
 ## Clientes
 
-Windows e Linux incorporam o motor Moonlight no próprio executável. Android incorpora o core no APK. Os binários estão nos artefatos dos builds do GitHub Actions; a release pública com binários e fontes correspondentes ainda está em preparação. O script `install.ps1` depende dessa release e não deve ser apresentado como download público disponível antes de sua publicação.
+Windows e Linux incorporam o motor Moonlight no próprio executável. Android incorpora o core no APK. Windows e Ubuntu 24.04 estão na [release desktop preview 0.1](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.1), com fontes correspondentes e checksums. O script `install.ps1` baixa essa versão pública e confere o hash antes de instalar. Android permanece nos artefatos de desenvolvimento e não faz parte desta release desktop.
 
 O painel web do HOST administra contas e sessões; ele não é um player de vídeo. Os clientes nativos são os players.
 
