@@ -29,7 +29,7 @@ export class Sessions {
       try {
         await this.backend.call('start', { id, peer: user.peer });
         const result = await this.backend.call('status', { id });
-        if (!result.ready) throw new Error('A VM iniciou, mas o Sunshine ainda não confirmou disponibilidade.');
+        if (!result.ready) throw new Error('O Sunshine ainda não confirmou disponibilidade da sessão.');
         this.store.state('ready'); this.store.audit(user.id, 'ready', id);
       } catch (e) {
         this.store.audit(user.id, 'prepare_failed', e.message);

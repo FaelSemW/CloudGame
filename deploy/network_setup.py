@@ -37,19 +37,20 @@ def firewall_plan():
         raise RuntimeError('Não foi possível determinar o estado do firewalld.')
     if not shutil.which('firewall-cmd'):
         raise RuntimeError('firewalld ativo, mas firewall-cmd ausente.')
+    zone_name = 'cloud-game' if __import__('pathlib').Path('/etc/cloud-game/native.json').exists() else 'libvirt'
     commands = []
     for scope in [(), ('--permanent',)]:
         zones = run('firewall-cmd', *scope, '--get-zones').split()
-        if 'libvirt' not in zones:
-            raise RuntimeError('Zona libvirt ausente no firewalld; instale a integração libvirt do HOST.')
+        if zone_name not in zones:
+            raise RuntimeError('Zona ' + zone_name + ' ausente no firewalld; reinicie após preparar a rede.')
         assigned = []
         for zone in zones:
             if BRIDGE in run('firewall-cmd', *scope, '--zone=' + zone, '--list-interfaces').split():
                 assigned.append(zone)
-        if assigned and assigned != ['libvirt']:
+        if assigned and assigned != [zone_name]:
             raise RuntimeError('cgbr0 pertence a outra zona do firewalld; configuração preservada.')
         if not assigned:
-            commands.append(('firewall-cmd', *scope, '--zone=libvirt', '--add-interface=' + BRIDGE))
+            commands.append(('firewall-cmd', *scope, '--zone=' + zone_name, '--add-interface=' + BRIDGE))
     return commands
 
 

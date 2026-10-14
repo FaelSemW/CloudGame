@@ -1,0 +1,50 @@
+name: Verify native HOST without virtual machines
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: cloud-game-linux-package-and-startup
+          run-id: 38270190388
+          github-token: ${{ github.token }}
+          path: build/native-client
+      - name: Install native session prerequisites in disposable runner
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo add-apt-repository -y multiverse
+          sudo apt-get update
+          sudo apt-get install -y ./build/native-client/dist/CloudGame-Ubuntu24-amd64.deb bubblewrap xvfb openbox x11-utils pulseaudio pulseaudio-utils steam-installer nftables iproute2 imagemagick
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0,'deploy')
+          from build_image import download
+          item=json.loads(Path('deploy/image-lock.json').read_text())['sunshine']
+          download(item['url'],item['sha256'],Path('build/sunshine.deb'))
+          PY
+          sudo apt-get install -y ./build/sunshine.deb
+      - name: Native capture, real Moonlight stream and discard
+        run: sudo env GITHUB_ACTIONS=true xvfb-run -a python3 tools/verify_native.py
+      - name: Collect only public diagnostics
+        if: always()
+        run: |
+          sudo install -d -m 755 build/native-public
+          for name in sunshine.log verification.json stream/pair.log stream/stream.log stream/stream.png; do
+            if sudo test -f "build/native-evidence/$name"; then
+              sudo install -m 644 "build/native-evidence/$name" "build/native-public/$(basename "$name")"
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-session-evidence
+          path: build/native-public/

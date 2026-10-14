@@ -13,11 +13,13 @@ import sys
 import tempfile
 import urllib.request
 
-ROOT = Path('/var/lib/cloud-game-installer')
+ROOT = Path('/var/lib/cloud-game-native-installer')
 STATE = ROOT / 'state.json'
 PACKAGES = {
-    'virsh': 'libvirt-client', 'qemu-img': 'qemu-img',
-    'qemu-system-x86_64': 'qemu-system-x86', 'nft': 'nftables',
+    'bwrap': 'bubblewrap', 'sway': 'sway', 'Xwayland': 'xorg-x11-server-Xwayland',
+    'Xvfb': 'xorg-x11-server-Xvfb', 'openbox': 'openbox', 'xdpyinfo': 'xorg-x11-utils',
+    'pulseaudio': 'pulseaudio', 'pactl': 'pulseaudio-utils', 'dbus-run-session': 'dbus-daemon',
+    'steam': 'steam', 'sunshine': '@sunshine-rpm', 'nft': 'nftables',
     'tailscale': 'tailscale', 'ip': 'iproute', 'sudo': 'sudo',
     'restorecon': 'policycoreutils', 'semanage': 'policycoreutils-python-utils',
     'visudo': 'sudo',
@@ -78,9 +80,6 @@ def ask(message):
 
 def missing_packages():
     missing = {package for tool, package in PACKAGES.items() if not shutil.which(tool)}
-    for package in ('libvirt-daemon-kvm', 'libvirt-daemon-config-network'):
-        if run('rpm', '-q', package, check=False).returncode:
-            missing.add(package)
     return sorted(missing)
 
 
@@ -115,25 +114,16 @@ def dependencies(state):
             owned_write(Path('/etc/yum.repos.d/cloud-game-tailscale.repo'), REPO)
     state['phase'] = 'dependencies'; state['packages'] = missing; save(state)
     print('Instalando dependências nativas: ' + ', '.join(missing), flush=True)
-    run('rpm-ostree', 'install', '--idempotent', '--allow-inactive', *missing, capture=False, timeout=3600)
+    install_args = list(missing)
+    if '@sunshine-rpm' in install_args:
+        from native_package import package
+        install_args[install_args.index('@sunshine-rpm')] = package(ROOT)
+    run('rpm-ostree', 'install', '--idempotent', '--allow-inactive', *install_args, capture=False, timeout=3600)
     state['rebootBoot'] = boot_id(); state['phase'] = 'reboot'; save(state)
     offer_reboot(); return False
 
 
 def services():
-    def exists(unit):
-        return run('systemctl', 'show', '--property=LoadState', '--value', unit) == 'loaded'
-    if run('systemctl', 'is-active', '--quiet', 'libvirtd.service', check=False).returncode == 0:
-        run('systemctl', 'enable', 'libvirtd.service')
-    elif exists('virtqemud.socket'):
-        for daemon in ('virtqemud', 'virtproxyd', 'virtnetworkd', 'virtstoraged', 'virtnodedevd', 'virtsecretd', 'virtnwfilterd'):
-            if exists(daemon + '.socket'):
-                run('systemctl', 'enable', '--now', daemon + '.socket')
-    elif exists('libvirtd.service'):
-        run('systemctl', 'enable', '--now', 'libvirtd.service')
-    else:
-        raise RuntimeError('Nenhum serviço libvirt nativo encontrado após instalar dependências.')
-    run('virsh', '-c', 'qemu:///system', 'list', '--all')
     run('systemctl', 'enable', '--now', 'tailscaled.service')
 
 
@@ -160,9 +150,9 @@ def tailnet():
 
 
 def verify_host(dns):
-    for unit in ('cloud-game.service', 'cloud-game-network.service', 'cloud-game-watchdog.timer', 'var-lib-cloudgame-volatile.mount'):
+    for unit in ('cloud-game.service', 'cloud-game-network.service', 'cloud-game-watchdog.timer', 'var-lib-cloudgame-native\\x2dvolatile.mount'):
         run('systemctl', 'is-active', '--quiet', unit)
-    health = json.loads(run('/usr/bin/python3', '/opt/cloud-game/deploy/vm_helper.py', input='{"op":"doctor"}'))
+    health = json.loads(run('/usr/bin/python3', '/opt/cloud-game/deploy/native_helper.py', input='{"op":"doctor"}'))
     if health.get('ok') is not True:
         raise RuntimeError('Diagnóstico do HOST não confirmou os recursos necessários.')
     with urllib.request.urlopen('https://' + dns + '/api/setup', timeout=30) as response:
@@ -181,20 +171,23 @@ def machine_ready(path=Path('/var/lib/cloudgame/control/host.sqlite')):
 
 def proceed(state):
     if not dependencies(state): return
+    if run('systemctl', 'is-active', '--quiet', 'firewalld', check=False).returncode == 0:
+        if 'cloud-game' not in run('firewall-cmd', '--get-zones').split():
+            state['rebootBoot'] = boot_id(); save(state); offer_reboot(); return
     state['phase'] = 'network'; save(state)
     services()
     dns = tailnet()
     receipt = Path('/etc/cloud-game/installed.json')
-    if state.get('installed') is not True and state.get('phaseBeforeResume') == 'image-and-host' and receipt.is_file():
+    if state.get('installed') is not True and state.get('phaseBeforeResume') == 'native-host' and receipt.is_file():
         if receipt.is_symlink() or receipt.stat().st_uid != 0 or receipt.stat().st_mode & 0o022:
             raise RuntimeError('Comprovante de instalação inseguro.')
-        if json.loads(receipt.read_text()).get('installer') == 'cloud-game-v1':
+        if json.loads(receipt.read_text()).get('installer') == 'cloud-game-native-v1':
             state['installed'] = True; save(state)
     if state.get('installed') is not True:
         if Path('/opt/cloud-game').exists():
             raise RuntimeError('Instalação existente/parcial preservada em /opt/cloud-game. Não será sobrescrita automaticamente.')
-        state['phase'] = 'image-and-host'; save(state)
-        from install_host import install
+        state['phase'] = 'native-host'; save(state)
+        from install_native import install
         install(state['software'])
         state['installed'] = True; save(state)
     state['phase'] = 'verification'; save(state)
@@ -232,9 +225,8 @@ def start(source=None, software=False):
         else:
             if source is None: raise RuntimeError('Nenhuma instalação salva para retomar.')
             if not software:
-                from hardware import dedicated_gpus
-                if len(dedicated_gpus()) != 1:
-                    answer = ask('Não há uma GPU única já dedicada a VFIO. Digite teste para usar CPU (desempenho limitado), ou q para sair sem instalar.')
+                if not list(Path('/dev/dri').glob('renderD*')):
+                    answer = ask('Nenhuma GPU com render node disponível. Digite teste para usar CPU, ou q para sair sem instalar.')
                     if answer != 'teste':
                         raise RuntimeError('Instalação interrompida. Nenhuma GPU do proprietário foi alterada.')
                     software = True
@@ -242,9 +234,11 @@ def start(source=None, software=False):
             state = {'version': 1, 'software': software, 'phase': 'start'}; save(state)
         state['phaseBeforeResume'] = state['phase']
         save(state)
-        launcher = '/usr/bin/pkexec /usr/bin/python3 /var/lib/cloud-game-installer/source/deploy/setup_host.py --window'
-        owned_write(Path('/usr/local/share/applications/cloud-game-setup.desktop'),
+        launcher = '/usr/bin/pkexec /usr/bin/python3 /var/lib/cloud-game-native-installer/source/deploy/setup_host.py --window'
+        owned_write(Path('/usr/local/share/applications/cloud-game-native-setup.desktop'),
                     '[Desktop Entry]\nType=Application\nName=Cloud Game — continuar instalação\nExec=' + launcher + '\nTerminal=true\nCategories=System;\n')
+        owned_write(Path('/etc/firewalld/zones/cloud-game.xml'),
+                    '<?xml version="1.0" encoding="utf-8"?>\n<zone target="ACCEPT"><short>Cloud Game</short><description>Native isolated session; access restricted by the cloud_game nftables table.</description></zone>\n')
         # Resume always uses the persisted version, including after another download.
         if source:
             fcntl.flock(lock, fcntl.LOCK_UN)
