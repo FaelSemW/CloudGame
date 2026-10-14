@@ -1,5 +1,7 @@
 # Clientes integrados — desenvolvimento
 
+Estado atual (14/10): o HOST usa sessões nativas, sem VM, conforme [NATIVE-HOST.md](NATIVE-HOST.md). As seções abaixo registram também etapas históricas e não substituem essa arquitetura. A instalação conjunta do Tailscale no desktop e o diagnóstico de conexão estão descritos em [CLIENT-NETWORK.md](CLIENT-NETWORK.md); Android ainda requer rede externa.
+
 O código da interface CloudGame é montado dentro dos projetos oficiais Moonlight por `tools/native_sources.py`. Não inicia executáveis Moonlight externos: desktop usa `CliPair::Launcher`, `CliStartStream::Launcher` e `Session` no mesmo processo Qt; Android usa `NvHTTP`, `PairingManager` e `Game` no mesmo APK, incluindo JNI/decoder/controles existentes.
 
 ```sh
