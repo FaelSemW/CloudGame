@@ -54,6 +54,17 @@ jobs:
         run: xvfb-run -a python3 tools/smoke_desktop.py build/linux/app/moonlight
       - name: Package Linux client
         run: python3 tools/package_linux.py build/linux/app/moonlight
+      - name: Verify joint Linux client and private network installation
+        run: |
+          sudo python3 - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, 'deploy')
+          from install_client_linux import provision
+          provision(Path('dist/CloudGame-Ubuntu24-amd64.deb').resolve())
+          PY
+          test -x /usr/bin/tailscale
+          systemctl is-active --quiet tailscaled
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -92,6 +103,9 @@ jobs:
           if (-not (Test-Path -LiteralPath $compiler)) { throw 'Inno Setup compiler missing' }
           & $compiler "/DClientDir=$pwd\third_party\moonlight-qt\build\deploy-x64-release" "/DProjectDir=$pwd" deploy/windows-client.iss
           if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
+      - name: Verify Microsoft runtime redistribution provenance
+        shell: pwsh
+        run: ./tools/verify_windows_runtime.ps1 -ClientDir "$pwd/third_party/moonlight-qt/build/deploy-x64-release"
       - name: Verify Windows install, startup and uninstall
         shell: pwsh
         run: ./tools/smoke_windows.ps1

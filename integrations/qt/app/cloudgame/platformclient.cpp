@@ -81,7 +81,15 @@ void PlatformClient::networkCommand(bool authorize) {
         emit changed();
     });
     QTimer::singleShot(authorize ? 35000 : 6000, process, [process]() { if (process->state() != QProcess::NotRunning) process->kill(); });
-    process->start(executable, authorize ? QStringList{"up", "--timeout=30s"} : QStringList{"status", "--json"});
+    QStringList arguments = authorize ? QStringList{"up", "--timeout=30s"} : QStringList{"status", "--json"};
+#ifdef Q_OS_LINUX
+    if (authorize) {
+        // Fixed system paths only: never elevate an executable found in user PATH.
+        executable = "/usr/bin/pkexec";
+        arguments.prepend("/usr/bin/tailscale");
+    }
+#endif
+    process->start(executable, arguments);
 }
 void PlatformClient::fail(QString message) { m_Message = message; m_Busy = false; emit changed(); }
 void PlatformClient::request(QString route, QJsonObject body, bool post, std::function<void(QJsonObject)> success, std::function<void()> failure) {

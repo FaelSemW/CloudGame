@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 export const digest = value => createHash('sha256').update(value).digest('hex');
 export function hashPassword(password) {
-  if (typeof password !== 'string' || password.length < 12 || password.length > 256) throw new Error('Use uma senha entre 12 e 256 caracteres.');
+  if (typeof password !== 'string' || password.length < 12 || password.length > 256) throw Object.assign(new Error('Use uma senha entre 12 e 256 caracteres.'), { status: 400 });
   const salt = randomBytes(16).toString('hex');
   return `${salt}:${scryptSync(password, salt, 64).toString('hex')}`;
 }
@@ -27,7 +27,7 @@ export class Store {
   audit(actor, event, detail = '') { this.db.prepare('INSERT INTO audit(time,actor,event,detail) VALUES(?,?,?,?)').run(Date.now(), actor ?? null, event, detail); }
   user(name) { return this.db.prepare('SELECT * FROM users WHERE name=?').get(name); }
   addUser(name, password, role, peer = null) {
-    if (!/^[a-zA-Z0-9_.-]{3,40}$/.test(name) || !['admin','player'].includes(role)) throw new Error('Nome ou permissão inválida.');
+    if (typeof name !== 'string' || !/^[a-zA-Z0-9_.-]{3,40}$/.test(name) || !['admin','player'].includes(role)) throw Object.assign(new Error('Use um nome de 3 a 40 caracteres: letras, números, ponto, hífen ou sublinhado.'), { status: 400 });
     return this.db.prepare('INSERT INTO users(name,password,role,peer) VALUES(?,?,?,?)').run(name, hashPassword(password), role, peer).lastInsertRowid;
   }
   login(name, password, address) {

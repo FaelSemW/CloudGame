@@ -6,7 +6,7 @@ const states = {
   ready: ['Pronto para conectar', 'Sunshine confirmou disponibilidade. Conecte pelo Moonlight para começar.'],
   streaming: ['Transmitindo', 'O HOST confirmou uma conexão no Sunshine. Aproveite sua sessão.'],
   reconnecting: ['Aguardando reconexão', 'A transmissão foi desconectada. Retorne pelo Moonlight em até 2 minutos.'],
-  cleaning: ['Limpando ambiente', 'O HOST está encerrando a VM e verificando o descarte dos dados locais.'],
+  cleaning: ['Limpando ambiente', 'O HOST está encerrando os processos e verificando o descarte dos dados locais.'],
   blocked: ['Bloqueado', 'O administrador precisa verificar a configuração ou recuperar o ambiente.'],
   offline: ['Sem comunicação', 'Não foi possível consultar o HOST. O estado atual da sessão é desconhecido.']
 };
@@ -84,7 +84,7 @@ async function admin() {
 async function init() {
   try {
     setup = (await api('setup')).required;
-    if (setup) { $('setupLabel').hidden = false; $('formLabel').textContent = 'PRIMEIRA CONFIGURAÇÃO'; $('formTitle').textContent = 'Configure seu HOST'; $('loginButton').textContent = 'Criar administrador'; }
+    if (setup) { $('setupLabel').hidden = false; $('formLabel').textContent = 'PRIMEIRA CONFIGURAÇÃO'; $('formTitle').textContent = 'Configure seu HOST'; $('loginButton').textContent = 'Criar administrador'; $('password').minLength = 12; $('password').maxLength = 256; $('password').placeholder = 'Senha da plataforma: 12 a 256 caracteres'; }
     await poll(); if (current?.user.role === 'admin') await admin();
   } catch (e) { notify(e.message); }
   setInterval(poll, 2000);
