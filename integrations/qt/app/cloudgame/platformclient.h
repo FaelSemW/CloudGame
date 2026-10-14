@@ -16,12 +16,18 @@ class PlatformClient : public QObject {
     Q_PROPERTY(QString message READ message NOTIFY changed)
     Q_PROPERTY(bool authenticated READ authenticated NOTIFY changed)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
+    Q_PROPERTY(QVariantMap networkStatus READ networkStatus NOTIFY changed)
+    Q_PROPERTY(bool networkBusy READ networkBusy NOTIFY changed)
 public:
     explicit PlatformClient(QObject* parent = nullptr);
     QVariantMap status() const { return m_Status.toVariantMap(); }
     QString message() const { return m_Message; }
     bool authenticated() const { return m_Authenticated; }
     bool busy() const { return m_Busy; }
+    QVariantMap networkStatus() const { return m_NetworkStatus.toVariantMap(); }
+    bool networkBusy() const { return m_NetworkBusy; }
+    Q_INVOKABLE void checkNetwork();
+    Q_INVOKABLE void connectNetwork();
     Q_INVOKABLE void login(QString origin, QString username, QString password);
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void reserve();
@@ -35,6 +41,8 @@ private:
     void request(QString route, QJsonObject body, bool post, std::function<void(QJsonObject)> success, std::function<void()> failure = {});
     void fail(QString message);
     void launch(ComputerManager* manager);
+    void beginPair(ComputerManager* manager, QString host);
+    void networkCommand(bool authorize);
     QNetworkAccessManager m_Network;
     QTimer m_Poll;
     QUrl m_Origin;
@@ -43,4 +51,6 @@ private:
     bool m_Authenticated = false;
     bool m_Busy = false;
     bool m_Refreshing = false;
+    bool m_NetworkBusy = false;
+    QJsonObject m_NetworkStatus;
 };

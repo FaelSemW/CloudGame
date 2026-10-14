@@ -27,10 +27,27 @@ UninstallDisplayIcon={app}\Moonlight.exe
 Source: "{#ClientDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#ProjectDir}\LICENSE"; DestDir: "{app}\licenses"; Flags: ignoreversion
 Source: "{#ProjectDir}\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#ProjectDir}\deploy\ensure-tailscale.ps1"; Flags: dontcopy
 
 [Icons]
 Name: "{group}\Cloud Game"; Filename: "{app}\Moonlight.exe"
 Name: "{autodesktop}\Cloud Game"; Filename: "{app}\Moonlight.exe"; Tasks: desktopicon
 
 [Tasks]
-Name: desktopicon; Description: "Criar atalho na área de trabalho"; Flags: unchecked
+Name: desktopicon; Description: "Criar atalho na área de trabalho"
+
+[Code]
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
+  Result := '';
+  ResultCode := -1;
+  ExtractTemporaryFile('ensure-tailscale.ps1');
+  if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+    '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\ensure-tailscale.ps1') + '"',
+    '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    Result := 'Não foi possível preparar a rede privada Tailscale.';
+  if ResultCode <> 0 then
+    Result := 'A instalação do Tailscale não foi concluída. Verifique a internet e autorize a instalação administrativa. Nenhuma chave compartilhada é necessária.';
+end;

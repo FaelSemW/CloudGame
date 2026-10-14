@@ -24,6 +24,12 @@ Item {
             Label { text: "CLOUD GAME"; color: "#d5f780"; font.pixelSize: 18 }
             Label { text: "Seu PC. Onde você estiver."; font.pixelSize: 32; wrapMode: Text.Wrap; Layout.fillWidth: true }
             Label { text: "Streaming integrado com tecnologia Moonlight • GPLv3"; wrapMode: Text.Wrap; Layout.fillWidth: true }
+            Label { text: CloudGame.networkStatus.message || "Verificando rede privada…"; wrapMode: Text.Wrap; Layout.fillWidth: true }
+            RowLayout {
+                Button { text: "Conectar rede privada"; enabled: !CloudGame.busy && !CloudGame.networkBusy; onClicked: CloudGame.connectNetwork() }
+                Button { text: "Verificar rede"; enabled: !CloudGame.busy && !CloudGame.networkBusy; onClicked: CloudGame.checkNetwork() }
+            }
+            Label { text: "Autorize este dispositivo na mesma rede do HOST. O administrador deve cadastrar o IP acima no seu usuário Cloud Game."; wrapMode: Text.Wrap; Layout.fillWidth: true }
             ColumnLayout {
                 visible: !CloudGame.authenticated; Layout.fillWidth: true; spacing: 12
                 Label { text: "Endereço HTTPS privado do HOST" }

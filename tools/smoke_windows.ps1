@@ -8,6 +8,9 @@ $setup = (Resolve-Path (Join-Path $PSScriptRoot '..\dist\CloudGame-Setup.exe')).
 $installLog = Join-Path $logRoot 'install.log'
 $install = Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$testRoot`"", "/LOG=`"$installLog`"") -Wait -PassThru -WindowStyle Hidden
 if ($install.ExitCode -ne 0) { throw "Instalação falhou: $($install.ExitCode)" }
+$networkCli = Join-Path $env:ProgramFiles 'Tailscale\tailscale.exe'
+if (-not (Test-Path -LiteralPath $networkCli -PathType Leaf)) { throw 'O instalador não preparou o Tailscale.' }
+if (-not (Get-Service -Name Tailscale -ErrorAction SilentlyContinue)) { throw 'Serviço de rede não instalado.' }
 $app = $null
 try {
     $executable = Join-Path $testRoot 'Moonlight.exe'
