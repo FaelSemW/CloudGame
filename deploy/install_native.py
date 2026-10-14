@@ -18,7 +18,7 @@ def install(software=False):
     outputs += [Path('/etc/sudoers.d/cloud-game')]
     for output in outputs:
         if output.exists() or output.is_symlink(): raise RuntimeError('Configuração existente preservada: ' + str(output))
-    for command in ('bwrap', 'sunshine', 'steam', 'sway', 'pulseaudio', 'nft', 'tailscale'):
+    for command in ('bwrap', 'sunshine', 'steam', 'sway', 'pipewire', 'pipewire-pulse', 'wireplumber', 'nft', 'tailscale'):
         if not shutil.which(command): raise RuntimeError('Componente ausente: ' + command)
     info = json.loads(run('tailscale', 'status', '--json'))
     dns = info.get('Self', {}).get('DNSName', '').rstrip('.')

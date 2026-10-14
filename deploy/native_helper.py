@@ -35,7 +35,7 @@ def config():
 
 def doctor():
     c = config()
-    for command in ('bwrap', 'sunshine', 'steam', 'pulseaudio', 'ip', 'nft', 'systemd-run'):
+    for command in ('bwrap', 'sunshine', 'steam', 'pipewire', 'pipewire-pulse', 'wireplumber', 'ip', 'nft', 'systemd-run'):
         if not shutil.which(command): raise RuntimeError('Componente nativo ausente: ' + command)
     if not shutil.which('Xvfb' if c['renderer'] == 'software' else 'sway'):
         raise RuntimeError('Compositor nativo ausente.')

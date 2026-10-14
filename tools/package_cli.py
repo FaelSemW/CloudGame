@@ -30,7 +30,7 @@ def unpack(destination):
 def doctor(software=False):
     release = Path('/etc/os-release')
     bazzite = release.exists() and 'bazzite' in release.read_text().lower()
-    requirements = ('python3', 'bwrap', 'sunshine', 'steam', 'pulseaudio', 'nft', 'tailscale', 'sudo', 'Xvfb' if software else 'sway')
+    requirements = ('python3', 'bwrap', 'sunshine', 'steam', 'pipewire', 'pipewire-pulse', 'wireplumber', 'nft', 'tailscale', 'sudo', 'Xvfb' if software else 'sway')
     result = {'system': platform.system(), 'architecture': platform.machine(),
               'bazzite': bazzite, 'backend': 'native', 'renderNodes': [str(p) for p in Path('/dev/dri').glob('renderD*')],
               'tools': {name: bool(shutil.which(name)) for name in requirements},

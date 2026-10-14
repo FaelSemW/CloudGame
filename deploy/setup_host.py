@@ -18,7 +18,8 @@ STATE = ROOT / 'state.json'
 PACKAGES = {
     'bwrap': 'bubblewrap', 'sway': 'sway', 'Xwayland': 'xorg-x11-server-Xwayland',
     'Xvfb': 'xorg-x11-server-Xvfb', 'openbox': 'openbox', 'xdpyinfo': 'xorg-x11-utils',
-    'pulseaudio': 'pulseaudio', 'pactl': 'pulseaudio-utils', 'dbus-run-session': 'dbus-daemon',
+    'pipewire': 'pipewire', 'pipewire-pulse': 'pipewire-pulseaudio', 'wireplumber': 'wireplumber',
+    'pactl': 'pulseaudio-utils', 'dbus-run-session': 'dbus-daemon',
     'steam': 'steam', 'sunshine': '@sunshine-rpm', 'nft': 'nftables',
     'tailscale': 'tailscale', 'ip': 'iproute', 'sudo': 'sudo',
     'restorecon': 'policycoreutils', 'semanage': 'policycoreutils-python-utils',

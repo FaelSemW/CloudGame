@@ -21,7 +21,7 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo add-apt-repository -y multiverse
           sudo apt-get update
-          sudo apt-get install -y ./build/native-client/dist/CloudGame-Ubuntu24-amd64.deb bubblewrap xvfb openbox x11-utils pulseaudio pulseaudio-utils steam-installer nftables iproute2 imagemagick
+          sudo apt-get install -y ./build/native-client/dist/CloudGame-Ubuntu24-amd64.deb bubblewrap xvfb openbox x11-utils pipewire pipewire-pulse wireplumber pulseaudio-utils steam-installer nftables iproute2 imagemagick
           if ! test -e /usr/bin/steam; then sudo ln -s /usr/games/steam /usr/bin/steam; fi
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           sudo swapoff -a

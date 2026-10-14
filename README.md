@@ -2,6 +2,8 @@
 
 HOST Bazzite e clientes Android/desktop com integração dos projetos oficiais Sunshine e Moonlight, em desenvolvimento.
 
+**Mudança em andamento: HOST nativo, sem VM.** O código atual prepara Sunshine/Steam em namespaces Linux e desktop separado, sem Ubuntu/QEMU/VFIO. O instalador público abaixo ainda pertence ao backend antigo; aguarde a atualização para testar o modo nativo. [Arquitetura, retomada e limitações do novo backend](docs/NATIVE-HOST.md). Gamepads, biblioteca Steam compartilhada e GPU física ainda não estão homologados neste modo.
+
 **Estado: implementação em andamento, ainda não uma V1 homologada.** O controle local funciona e tem testes automatizados. Os clientes nativos Android, Windows e Linux compilaram no GitHub Actions, incluindo APK, instalador Windows e pacote Ubuntu 24.04. O cliente Linux abriu sua interface em um display de teste. Todos incorporam o motor Moonlight; não exigem outro aplicativo Moonlight instalado. O caminho Linux de VM/GPU/rede está implementado, mas não foi executado em Bazzite. Streaming real de desktop e descarte entre dois boots passaram em QEMU no CI, com Sunshine e o cliente nativo. Instalação Bazzite, jogos, GPU física, controles e streaming Android ainda exigem homologação. Consulte [integração nativa e evidências](docs/NATIVE-INTEGRATION.md).
 
 A pasta recebida estava vazia, sem Git ou código a preservar. Esta implementação inicializou o repositório e não substituiu um produto anterior.

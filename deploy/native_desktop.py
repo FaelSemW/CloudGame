@@ -26,15 +26,15 @@ def run_desktop(mode):
             # The compositor sets WAYLAND_DISPLAY and DISPLAY for this exec child.
             if not os.environ.get('WAYLAND_DISPLAY'): raise RuntimeError('Compositor Wayland ausente.')
         else: raise RuntimeError('Perfil desconhecido.')
-        processes.append(subprocess.Popen([
-            'pulseaudio', '--daemonize=no', '--log-target=stderr', '--exit-idle-time=-1',
-            '-n', '-L', 'module-native-protocol-unix',
-            '-L', 'module-null-sink sink_name=cloudgame']))
+        processes.append(subprocess.Popen(['pipewire']))
+        processes.append(subprocess.Popen(['pipewire-pulse']))
+        processes.append(subprocess.Popen(['wireplumber']))
         for attempt in range(100):
             if subprocess.run(['pactl', 'info'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
                 break
             time.sleep(.1)
         else: raise RuntimeError('Áudio temporário não iniciou.')
+        subprocess.run(['pactl', 'load-module', 'module-null-sink', 'sink_name=cloudgame'], check=True)
         subprocess.run(['pactl', 'set-default-sink', 'cloudgame'], check=True)
         subprocess.run(['pactl', 'set-default-source', 'cloudgame.monitor'], check=True)
         password = (HOME / '.sunshine-bootstrap').read_text()
@@ -55,6 +55,8 @@ def run_desktop(mode):
 
 if __name__ == '__main__':
     mode = sys.argv[1]
+    if not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
+        os.execvp('dbus-run-session', ['dbus-run-session', '--', '/usr/bin/python3', __file__, mode])
     if mode == 'gpu' and not os.environ.get('WAYLAND_DISPLAY'):
         config = HOME / 'sway.conf'
         config.write_text('output HEADLESS-1 mode 1920x1080@60Hz\n'
