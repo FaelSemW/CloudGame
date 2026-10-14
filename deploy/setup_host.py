@@ -2,6 +2,7 @@
 """Resumable Bazzite setup. Fixed package/service names, no remote shell scripts."""
 import json
 import argparse
+from contextlib import closing
 import os
 from pathlib import Path
 import re
@@ -172,7 +173,7 @@ def verify_host(dns):
 
 def machine_ready(path=Path('/var/lib/cloudgame/control/host.sqlite')):
     # Read the HOST's confirmed state; never invent availability from service startup.
-    with sqlite3.connect(path.as_uri() + '?mode=ro', uri=True) as database:
+    with closing(sqlite3.connect(path.as_uri() + '?mode=ro', uri=True)) as database:
         row = database.execute('SELECT state FROM machine WHERE id=1').fetchone()
     if not row or row[0] != 'available':
         raise RuntimeError('O HOST ainda não confirmou disponibilidade. Consulte os diagnósticos no painel; progresso preservado.')
