@@ -25,6 +25,7 @@ PACKAGES = {
     'restorecon': 'policycoreutils', 'semanage': 'policycoreutils-python-utils',
     'visudo': 'sudo',
     'pkexec': 'polkit',
+    'xdg-open': 'xdg-utils', 'xdg-user-dir': 'xdg-user-dirs',
 }
 REPO = """[tailscale-stable]
 name=Tailscale stable

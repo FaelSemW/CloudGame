@@ -18,6 +18,8 @@ Tailscale requer autorização no navegador, MagicDNS e HTTPS. O painel permanec
 
 O novo estado fica em `/var/lib/cloud-game-native-installer`. Após reiniciar, use **Cloud Game — continuar instalação**. Se o menu não o mostrar:
 
+O assistente também registra esse atalho no menu do usuário que autorizou a instalação. Depois de instalar os serviços, cria **Cloud Game HOST** na busca do menu/Super e na pasta de área de trabalho configurada pelo XDG. Esse atalho abre o painel privado no navegador. KDE/GNOME podem pedir a confirmação de execução do atalho de desktop na primeira abertura; a entrada no menu não depende disso.
+
 ```sh
 sudo python3 /var/lib/cloud-game-native-installer/source/deploy/setup_host.py
 ```
