@@ -51,7 +51,10 @@ export async function createApp({ store, backend, origin = 'http://127.0.0.1:878
       if (!user) fail(401, 'Entre para continuar.');
       if (req.method === 'GET' && url.pathname === '/api/status') {
         const m = store.machine;
-        return send(200, { notice: sessions.health.profile === 'software' ? 'Modo de teste por CPU: desempenho limitado, sem GPU dedicada.' : null, user: { name: user.name, role: user.role }, state: m.state, own: m.user_id === user.id, session: m.user_id === user.id ? m.session : null, paired: m.user_id === user.id ? !!m.paired : false, started: m.user_id === user.id ? m.started : null, streamHost: m.user_id === user.id ? streamHost : null, error: m.state === 'blocked' ? 'PC bloqueado. O administrador precisa verificar a preparação ou a limpeza.' : m.error ? 'A preparação anterior falhou. O ambiente foi descartado. Consulte o administrador antes de tentar novamente.' : null });
+          const notices = [];
+          if (sessions.health.profile === 'software') notices.push('Modo de teste por CPU: desempenho limitado.');
+          if (sessions.health.gamepad === false) notices.push('Controles disponíveis: teclado e mouse em X11. Gamepads indisponíveis nesta versão.');
+          return send(200, { notice: notices.join(' ') || null, user: { name: user.name, role: user.role }, state: m.state, own: m.user_id === user.id, session: m.user_id === user.id ? m.session : null, paired: m.user_id === user.id ? !!m.paired : false, started: m.user_id === user.id ? m.started : null, streamHost: m.user_id === user.id ? streamHost : null, error: m.state === 'blocked' ? 'PC bloqueado. O administrador precisa verificar a preparação ou a limpeza.' : m.error ? 'A preparação anterior falhou. O ambiente foi descartado. Consulte o administrador antes de tentar novamente.' : null });
       }
       if (req.method === 'POST' && url.pathname === '/api/logout') { store.db.prepare('DELETE FROM tokens WHERE hash=?').run(digest(token)); res.setHeader('Set-Cookie', cookie('', 0)); return send(200, { ok: true }); }
       if (req.method === 'POST' && url.pathname === '/api/session/start') {

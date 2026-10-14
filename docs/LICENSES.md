@@ -4,7 +4,7 @@ Revisão das licenças de topo dos quatro repositórios oficiais, do NOTICE do S
 
 | Componente | Licença observada | Uso nesta versão |
 |---|---|---|
-| [Sunshine](https://github.com/LizardByte/Sunshine) | GNU GPL versão 3; preservar também NOTICE e cabeçalhos dos arquivos da versão distribuída | Processo externo dentro da VM, API de administração local, protocolo original para streaming |
+| [Sunshine](https://github.com/LizardByte/Sunshine) | GNU GPL versão 3; preservar também NOTICE e cabeçalhos dos arquivos da versão distribuída | Processo na sessão nativa isolada, API de administração privada, protocolo original para streaming |
 | [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt) | GNU GPL versão 3 | Código incorporado no cliente Windows/Linux, com overlay CloudGame |
 | [Moonlight Android](https://github.com/moonlight-stream/moonlight-android) | GNU GPL versão 3, arquivo LICENSE.txt | Código incorporado no mesmo APK CloudGame |
 | [Moonlight common C](https://github.com/moonlight-stream/moonlight-common-c) | GNU GPL versão 3, arquivo LICENSE.txt | Linkado pelos clientes nativos nas versões dos respectivos submódulos |

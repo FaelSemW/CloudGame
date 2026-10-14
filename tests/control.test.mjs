@@ -14,7 +14,7 @@ class FaultBackend {
     this.operations.push([op, args]);
     if (this.fail === op) throw new Error('Injected ' + op + ' failure');
     if (op === 'start' && this.gate) await this.gate;
-    return { ok: true, clean: true, ready: true, connected: this.connected };
+    return { ok: true, clean: true, ready: true, paired: true, connected: this.connected };
   }
 }
 function fixture(t) {
@@ -66,6 +66,12 @@ test('only one pairing is accepted and PIN is validated', async t => {
   const f = fixture(t); f.store.clear(); await f.sessions.start(f.user);
   await assert.rejects(f.sessions.pair(f.user,'1234; command'), /quatro/);
   await f.sessions.pair(f.user,'1234'); await assert.rejects(f.sessions.pair(f.user,'5678'),/Pareamento/);
+});
+test('pairing requires positive Sunshine confirmation', async t => {
+  const f = fixture(t); f.store.clear(); await f.sessions.start(f.user);
+  f.backend.call = async () => ({ paired: false });
+  await assert.rejects(f.sessions.pair(f.user, '1234'), /não confirmou/);
+  assert.equal(f.store.machine.paired, 0);
 });
 test('failed preparation attempts verified cleanup', async t => {
   const f = fixture(t); f.store.clear(); f.backend.fail='start';

@@ -62,7 +62,8 @@ export class Sessions {
       const m = this.store.machine;
       if (m.user_id !== user.id || m.state !== 'ready' || m.paired) throw Object.assign(new Error('Pareamento indisponível. Apenas um dispositivo pode ser pareado por sessão.'), { status: 409 });
       if (!/^\d{4}$/.test(pin)) throw Object.assign(new Error('Informe os quatro números exibidos pelo Moonlight.'), { status: 400 });
-      await this.backend.call('pair', { id: m.session, pin });
+      const result = await this.backend.call('pair', { id: m.session, pin });
+      if (result.paired !== true) throw Object.assign(new Error('O Sunshine não confirmou o pareamento.'), { status: 503 });
       this.store.db.exec('UPDATE machine SET paired=1 WHERE id=1');
       this.store.audit(user.id, 'paired');
     });
@@ -81,7 +82,7 @@ export class Sessions {
     await this.exclusive(async () => {
       try {
         const s = await this.backend.call('status', { id: m.session });
-        if (!s.ready) throw new Error('A VM ou o Sunshine parou de responder.');
+        if (!s.ready) throw new Error('A sessão ou o Sunshine parou de responder.');
         const now = Date.now();
         if (s.connected) {
           this.store.db.prepare('UPDATE machine SET last_connected=? WHERE id=1').run(now);
