@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import os
+import sqlite3
 from pathlib import Path
 import tempfile
 import types
@@ -13,6 +14,17 @@ spec.loader.exec_module(wizard)
 
 
 class SetupTests(unittest.TestCase):
+    def test_completion_requires_real_host_database_availability(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'host.sqlite'
+            with sqlite3.connect(path) as database:
+                database.execute('CREATE TABLE machine(id INTEGER, state TEXT)')
+                database.execute("INSERT INTO machine VALUES (1, 'blocked')")
+            with self.assertRaisesRegex(RuntimeError, 'disponibilidade'): wizard.machine_ready(path)
+            with sqlite3.connect(path) as database:
+                database.execute("UPDATE machine SET state='available'")
+            wizard.machine_ready(path)
+
     @unittest.skipUnless(os.name == 'posix', 'Requires a real Unix controlling terminal')
     def test_prompt_uses_real_controlling_terminal(self):
         import pty

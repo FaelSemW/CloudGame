@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -164,7 +165,17 @@ def verify_host(dns):
     if health.get('ok') is not True:
         raise RuntimeError('Diagnóstico do HOST não confirmou os recursos necessários.')
     with urllib.request.urlopen('https://' + dns + '/api/setup', timeout=30) as response:
-        return json.load(response)
+        setup = json.load(response)
+    machine_ready()
+    return setup
+
+
+def machine_ready(path=Path('/var/lib/cloudgame/control/host.sqlite')):
+    # Read the HOST's confirmed state; never invent availability from service startup.
+    with sqlite3.connect(path.as_uri() + '?mode=ro', uri=True) as database:
+        row = database.execute('SELECT state FROM machine WHERE id=1').fetchone()
+    if not row or row[0] != 'available':
+        raise RuntimeError('O HOST ainda não confirmou disponibilidade. Consulte os diagnósticos no painel; progresso preservado.')
 
 
 def proceed(state):

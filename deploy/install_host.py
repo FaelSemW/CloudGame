@@ -68,7 +68,7 @@ def install(software=False):
     serve_available(json.loads(run('tailscale', 'serve', 'status', '--json')))
     # Refuse all known conflicts before starting a long image build or changing accounts.
     outputs = [pathlib.Path('/etc/systemd/system') / name for name in UNITS]
-    outputs += [pathlib.Path('/etc/sudoers.d/cloud-game'), pathlib.Path('/etc/cloud-game/vm.json'), pathlib.Path('/etc/cloud-game/host.env')]
+    outputs += [pathlib.Path('/etc/sudoers.d/cloud-game'), pathlib.Path('/etc/cloud-game/vm.json'), pathlib.Path('/etc/cloud-game/host.env'), pathlib.Path('/etc/cloud-game/installed.json')]
     for output in outputs:
         if output.exists() or output.is_symlink():
             raise RuntimeError('Configuração existente preservada: ' + str(output))
