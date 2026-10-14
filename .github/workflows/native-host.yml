@@ -24,6 +24,7 @@ jobs:
           sudo apt-get install -y ./build/native-client/dist/CloudGame-Ubuntu24-amd64.deb bubblewrap xvfb openbox x11-utils pulseaudio pulseaudio-utils steam-installer nftables iproute2 imagemagick
           if ! test -e /usr/bin/steam; then sudo ln -s /usr/games/steam /usr/bin/steam; fi
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo swapoff -a
           python3 - <<'PY'
           import json,sys
           from pathlib import Path
@@ -34,7 +35,9 @@ jobs:
           PY
           sudo apt-get install -y ./build/sunshine.deb
       - name: Native capture, real Moonlight stream and discard
-        run: sudo env GITHUB_ACTIONS=true xvfb-run -a python3 tools/verify_native.py
+        run: |
+          python3 -m unittest discover -s tests -p 'test_native.py'
+          sudo env GITHUB_ACTIONS=true xvfb-run -a python3 tools/verify_native.py
       - name: Collect only public diagnostics
         if: always()
         run: |

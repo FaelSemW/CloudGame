@@ -42,15 +42,20 @@ def doctor():
     if c['renderer'] == 'gpu' and not list(Path('/dev/dri').glob('renderD*')):
         raise RuntimeError('Nenhum render node da GPU disponível.')
     assert_memory_only_swap()
-    trusted(VOL, True)
     trusted(ROOT / 'library', True)
-    mounts = [line.split() for line in Path('/proc/mounts').read_text().splitlines()]
-    if not any(fields[1] == str(VOL) and fields[2] == 'tmpfs' for fields in mounts):
-        raise RuntimeError('Diretório temporário precisa ser um mount tmpfs exclusivo.')
+    volatile_mount()
     if (ROOT / 'runtime.json').exists():
         raise RuntimeError('Existe uma sessão do backend VM antigo; encerre-a antes de migrar.')
     return {'ok': True, 'profile': 'software' if c['renderer'] == 'software' else 'native',
-            'isolation': 'Linux namespaces + usuário dedicado + cgroup + tmpfs', 'backend': 'native'}
+            'isolation': 'Linux namespaces + usuário dedicado + cgroup + tmpfs', 'backend': 'native',
+            'input': ['keyboard-x11', 'mouse-x11'], 'gamepad': False}
+
+
+def volatile_mount():
+    trusted(VOL, True)
+    mounts = [line.split() for line in Path('/proc/mounts').read_text().splitlines()]
+    if not any(fields[1] == str(VOL) and fields[2] == 'tmpfs' for fields in mounts):
+        raise RuntimeError('Diretório temporário precisa ser um mount tmpfs exclusivo.')
 
 
 def write_state(value):
@@ -196,8 +201,11 @@ def start(sid, peer):
 
 def recover():
     network()
+    volatile_mount()
     if not STATE.exists():
         if list(VOL.iterdir()): raise RuntimeError('Dados sem estado: revisão administrativa necessária.')
+        if Path('/sys/class/net/' + LINK).exists() or NS in [line.split()[0] for line in run('ip', 'netns', 'list').splitlines()]:
+            raise RuntimeError('Rede sem estado registrado; revisão administrativa necessária.')
         return {'clean': True}
     value = state(); sid = value['id']; unit = 'cg-native-' + sid + '.service'
     active = run('systemctl', 'show', '-p', 'ActiveState', '--value', unit)
