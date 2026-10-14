@@ -1,6 +1,6 @@
 # Instalação do HOST e clientes nativos
 
-O pacote HOST atual inclui o serviço de controle, painel, isolamento QEMU/libvirt, provisionador automático de Ubuntu/Xfce/Steam/Sunshine e descarte das sessões. Sunshine é baixado da release oficial com SHA-256 fixado durante a preparação. Não é necessário copiar o pacote manualmente para a máquina.
+O novo pacote HOST inclui controle, painel, sessões nativas bubblewrap, Sunshine/Steam e descarte temporário. Não instala VM, Ubuntu ou QEMU. Sunshine é baixado da release oficial em RPM com SHA-256 fixado. Não é necessário copiar o pacote para a máquina. Confira no README se a publicação do pacote nativo já foi concluída antes de usar o comando.
 
 ## HOST Bazzite
 
@@ -16,11 +16,11 @@ Para teste em VM sem GPU dedicada:
 curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh -s -- --software
 ```
 
-O instalador verifica a integridade, confere ferramentas, pede elevação administrativa, prepara a imagem e valida um novo boot antes de configurar os serviços. O perfil software transmite vídeo real usando CPU, com desempenho limitado. A VM de testes precisa ter memória e espaço suficientes para executar uma segunda VM; não equivale ao desempenho de um PC com GPU.
+O instalador verifica integridade, confere ferramentas, pede elevação e configura os serviços nativos. O perfil software transmite vídeo real por CPU, com desempenho limitado. Dentro de uma VM Bazzite existente ele não cria outra VM. Esse teste não equivale ao desempenho de um PC com GPU.
 
-**Fluxo guiado:** ferramentas nativas ausentes são instaladas via rpm-ostree; reinício tem progresso salvo e retomada pelo menu. Tailscale é ativado e pede sua autorização pelo navegador. O assistente orienta MagicDNS/HTTPS e verifica o certificado antes de instalar o HOST. A CLI recusa conflitos e preserva instalações existentes; não implementa atualização automática. Instalação em Bazzite, GPU física e convivência com políticas particulares de firewall continuam pendentes de homologação. O pipeline já comprovou provisionamento, streaming nativo Linux por CPU e descarte entre boots.
+**Fluxo guiado:** dependências ausentes via rpm-ostree; reinício com progresso salvo e retomada pelo menu. Tailscale pede autorização no navegador e o assistente orienta MagicDNS/HTTPS. O atalho **Cloud Game HOST** abre o painel pela busca do menu/Super ou área de trabalho. Configurações conflitantes são preservadas; não há migração automática de um HOST VM já instalado. Bazzite, GPU física e firewall real continuam pendentes de homologação.
 
-A imagem não inclui jogos nem credenciais Steam. Jogos autorizados são preparados na base persistente conforme BAZZITE.md; login do jogador acontece apenas na interface oficial da Steam dentro da sessão.
+Não inclui jogos nem credenciais Steam. Login acontece pela interface oficial da Steam. Gamepads e importação transparente da biblioteca persistente ainda não estão implementados no novo backend; veja [limitações nativas](NATIVE-HOST.md).
 
 ## Clientes
 
@@ -30,6 +30,6 @@ O painel web do HOST administra contas e sessões; ele não é um player de víd
 
 ## Verificação e recuperação
 
-`python3 cloud-game.pyz verify` confere os arquivos internos. O checksum externo não é assinatura de autoria. `doctor --software` permite conferir o perfil de testes sem exigir KVM. Consulte [ACCEPTANCE.md](ACCEPTANCE.md) para homologação e [BAZZITE.md](BAZZITE.md) para recuperação. Uma limpeza incompleta mantém o HOST bloqueado.
+`python3 cloud-game.pyz verify` confere arquivos internos. O checksum externo não é assinatura de autoria. `doctor --software` confere ferramentas nativas; KVM não é necessário. Consulte [NATIVE-HOST.md](NATIVE-HOST.md) para diagnóstico e retomada. Limpeza incompleta mantém o HOST bloqueado.
 
 O modo antigo `install --lab` permanece disponível somente para desenvolver o painel e não transmite jogos; não é o procedimento de instalação do produto.

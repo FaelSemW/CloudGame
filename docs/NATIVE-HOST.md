@@ -44,4 +44,6 @@ sudo journalctl -u 'cg-native-*' -b --no-pager
 
 Recupere pelo painel HOST. Não altere a reserva no SQLite nem remova seu arquivo manualmente: isso contornaria a verificação de descarte.
 
-O workflow `native-host.yml` testa captura Sunshine, pareamento/decodificação Moonlight e descarte em Linux de CI, sem QEMU. Esse teste não substitui instalação Bazzite, Steam/jogos, entrada, GPU, Android ou rede Tailscale real.
+O workflow `native-host.yml` testa captura Sunshine, pareamento/decodificação Moonlight e descarte em Linux de CI, sem QEMU. A [execução 38589875078](https://github.com/FaelSemW/CloudGame/actions/runs/38589875078), commit 9039ab1, passou com PipeWire isolado. Esse teste não substitui instalação Bazzite, Steam/jogos, entrada, GPU, Android ou rede Tailscale real.
+
+PipeWire usa um [sink virtual oficial](https://docs.pipewire.org/page_pulse_module_null_sink.html) dentro da sessão; não acessa o servidor de áudio do proprietário. A política WirePlumber desabilita descoberta de hardware e acesso ao logind externo.

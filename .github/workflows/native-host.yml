@@ -36,6 +36,7 @@ jobs:
           sudo apt-get install -y ./build/sunshine.deb
       - name: Native capture, real Moonlight stream and discard
         run: |
+          python3 tools/package.py
           python3 -m unittest discover -s tests -p 'test_*.py'
           mkdir -p "$HOME/Desktop"
           xdg-user-dirs-update --set DESKTOP "$HOME/Desktop"
