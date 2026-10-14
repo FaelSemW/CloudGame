@@ -66,8 +66,9 @@ def owned_write(path, content, mode=0o644):
 def ask(message):
     # curl | sh consumes stdin; prompts must use the controlling terminal.
     try:
-        with open('/dev/tty', 'r+') as terminal:
+        with open('/dev/tty', 'w') as terminal:
             terminal.write(message + '\n'); terminal.flush()
+        with open('/dev/tty', 'r') as terminal:
             return terminal.readline().strip().lower()
     except OSError:
         raise RuntimeError('Abra “Cloud Game — continuar instalação” no menu para continuar interativamente.')

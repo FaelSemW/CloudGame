@@ -13,6 +13,34 @@ spec.loader.exec_module(wizard)
 
 
 class SetupTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == 'posix', 'Requires a real Unix controlling terminal')
+    def test_prompt_uses_real_controlling_terminal(self):
+        import pty
+        import select
+        import signal
+        import time
+        child, descriptor = pty.fork()
+        if child == 0:
+            try: os._exit(0 if wizard.ask('Confirm?') == 'sim' else 1)
+            except BaseException: os._exit(2)
+        finished = False
+        try:
+            self.assertTrue(select.select([descriptor], [], [], 5)[0])
+            os.read(descriptor, 4096)
+            os.write(descriptor, b'sim\n')
+            for attempt in range(100):
+                pid, status = os.waitpid(child, os.WNOHANG)
+                if pid:
+                    finished = True
+                    self.assertEqual(os.waitstatus_to_exitcode(status), 0)
+                    break
+                time.sleep(0.02)
+            self.assertTrue(finished, 'Interactive prompt did not finish')
+        finally:
+            if not finished:
+                os.kill(child, signal.SIGKILL); os.waitpid(child, 0)
+            os.close(descriptor)
+
     @unittest.skipUnless(os.name == 'posix', 'Unix permissions and fsync semantics')
     def test_saved_state_is_private_atomic_and_symlink_safe(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(wizard, 'ROOT', Path(directory)), \
