@@ -169,6 +169,9 @@ test('bootstrap is one-time and requires installation secret', async t => {
   const origin='http://127.0.0.1:8787'; const {server}=await createApp({store,backend:new FaultBackend(),origin,setupToken:'installation-secret'});
   await new Promise(r=>server.listen(0,'127.0.0.1',r)); t.after(()=>{server.closeAllConnections();server.close();});
   const url=`http://127.0.0.1:${server.address().port}/api/setup`;
-  const post=token=>fetch(url,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({token,name:'admin',password:'long-admin-password'})});
+  const post=(token,password='long-admin-password')=>fetch(url,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({token,name:'admin',password})});
+  const short = await post('installation-secret', 'short');
+  assert.equal(short.status, 400); assert.match((await short.json()).error, /12.*256/);
+  assert.equal(store.user('admin'), undefined);
   assert.equal((await post('wrong')).status,403); assert.equal((await post('installation-secret')).status,201); assert.equal((await post('installation-secret')).status,403);
 });
