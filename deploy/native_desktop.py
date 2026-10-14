@@ -10,6 +10,23 @@ HOME = Path('/home/player')
 CONFIG = HOME / '.config/sunshine/sunshine.conf'
 
 
+def audio_policy():
+    version = subprocess.run(['wireplumber', '--version'], check=True, capture_output=True, text=True).stdout
+    root = HOME / '.config/wireplumber'
+    if '0.4.' in version:
+        fragments = {
+            'main.lua.d/89-cloud-game.lua': 'alsa_monitor.enabled = false\nv4l2_monitor.enabled = false\nlibcamera_monitor.enabled = false\ndefault_access.properties["enable-flatpak-portal"] = false\n',
+            'bluetooth.lua.d/89-cloud-game.lua': 'bluez_monitor.enabled = false\n',
+        }
+    else:
+        fragments = {'wireplumber.conf.d/90-cloud-game.conf':
+            'wireplumber.profiles = { main = { hardware.audio = disabled hardware.bluetooth = disabled hardware.video-capture = disabled support.logind = disabled support.reserve-device = disabled support.portal-permissionstore = disabled } }\n'}
+    for name, content in fragments.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+
 def run_desktop(mode):
     processes = []
     try:
@@ -26,6 +43,7 @@ def run_desktop(mode):
             # The compositor sets WAYLAND_DISPLAY and DISPLAY for this exec child.
             if not os.environ.get('WAYLAND_DISPLAY'): raise RuntimeError('Compositor Wayland ausente.')
         else: raise RuntimeError('Perfil desconhecido.')
+        audio_policy()
         processes.append(subprocess.Popen(['pipewire']))
         processes.append(subprocess.Popen(['pipewire-pulse']))
         processes.append(subprocess.Popen(['wireplumber']))
@@ -35,7 +53,11 @@ def run_desktop(mode):
             time.sleep(.1)
         else: raise RuntimeError('Áudio temporário não iniciou.')
         subprocess.run(['pactl', 'load-module', 'module-null-sink', 'sink_name=cloudgame'], check=True)
-        subprocess.run(['pactl', 'set-default-sink', 'cloudgame'], check=True)
+        for attempt in range(100):
+            if subprocess.run(['pactl', 'set-default-sink', 'cloudgame'], stderr=subprocess.DEVNULL).returncode == 0:
+                break
+            time.sleep(.1)
+        else: raise RuntimeError('Política de áudio temporário não iniciou.')
         subprocess.run(['pactl', 'set-default-source', 'cloudgame.monitor'], check=True)
         password = (HOME / '.sunshine-bootstrap').read_text()
         credentials = subprocess.run(['sunshine', str(CONFIG), '--creds', 'cloudgame', password], capture_output=True)

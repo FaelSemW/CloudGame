@@ -192,6 +192,9 @@ def proceed(state):
         install(state['software'])
         state['installed'] = True; save(state)
     state['phase'] = 'verification'; save(state)
+    from launchers import entry, install_for_user
+    owned_write(Path('/usr/local/share/applications/cloud-game-host.desktop'), entry('host', dns))
+    install_for_user(state.get('desktopUid'), 'host', dns)
     setup = verify_host(dns)
     state['phase'] = 'complete'; save(state)
     print('\nServiços e HTTPS verificados. Painel: https://' + dns, flush=True)
@@ -232,12 +235,16 @@ def start(source=None, software=False):
                         raise RuntimeError('Instalação interrompida. Nenhuma GPU do proprietário foi alterada.')
                     software = True
             shutil.copytree(source, ROOT / 'source')
-            state = {'version': 1, 'software': software, 'phase': 'start'}; save(state)
+            uid = os.environ.get('PKEXEC_UID') or os.environ.get('SUDO_UID')
+            state = {'version': 1, 'software': software, 'phase': 'start',
+                     'desktopUid': int(uid) if uid and uid.isdigit() and 1000 <= int(uid) < 65534 else None}; save(state)
         state['phaseBeforeResume'] = state['phase']
         save(state)
         launcher = '/usr/bin/pkexec /usr/bin/python3 /var/lib/cloud-game-native-installer/source/deploy/setup_host.py --window'
         owned_write(Path('/usr/local/share/applications/cloud-game-native-setup.desktop'),
                     '[Desktop Entry]\nType=Application\nName=Cloud Game — continuar instalação\nExec=' + launcher + '\nTerminal=true\nCategories=System;\n')
+        from launchers import install_for_user
+        install_for_user(state.get('desktopUid'), 'setup')
         owned_write(Path('/etc/firewalld/zones/cloud-game.xml'),
                     '<?xml version="1.0" encoding="utf-8"?>\n<zone target="ACCEPT"><short>Cloud Game</short><description>Native isolated session; access restricted by the cloud_game nftables table.</description></zone>\n')
         # Resume always uses the persisted version, including after another download.
