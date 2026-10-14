@@ -21,11 +21,10 @@ done
 stage=$(mktemp -d)
 trap 'rm -f -- "$stage/cloud-game.pyz"; rmdir -- "$stage"' EXIT HUP INT TERM
 echo 'Baixando Cloud Game e verificando a integridade…'
-curl --fail --show-error --silent --location --proto '=https' --proto-redir '=https'     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads/cloud-game.pyz
-printf '%s  %s\n' 'e12142d6af7e5d4b88ec0702320133cd489dbed0419ed4acf85ae2766522d693' "$stage/cloud-game.pyz" | sha256sum --check --status
+curl --fail --show-error --silent --location --proto '=https' --proto-redir '=https'     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads/host-setup-5250b47/cloud-game.pyz
+printf '%s  %s\n' 'e5cc1e54831a6ddcb095b5254edcd2e07536879b0a7d426f2f0ecce60729d231' "$stage/cloud-game.pyz" | sha256sum --check --status
 python3 "$stage/cloud-game.pyz" verify
-# Preflight must finish before elevation or filesystem installation.
-python3 "$stage/cloud-game.pyz" doctor $profile
+# The resumable wizard prepares missing native prerequisites after elevation.
 if [ "$(id -u)" = 0 ]; then
     python3 "$stage/cloud-game.pyz" install $profile
 elif command -v pkexec >/dev/null 2>&1; then

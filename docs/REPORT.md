@@ -79,3 +79,11 @@ Os critérios de conclusão fornecidos pelo usuário continuam pendentes onde ex
 A revisão a32812d passou no CI 38469704981, com 32 testes Python, 23 Node, XML libvirt e rede nftables real. O teste de rede também executou duas vezes a configuração da bridge para verificar reaproveitamento da interface própria. Proteções contra conflito de rota/bridge/zona passaram nos testes; o CI não executou firewalld Bazzite. A revisão de distribuição 2945218 passou no CI 38470256013. Windows passou na auditoria das dez DLLs REDIST e teste de instalação/abertura/desinstalação no CI 38469440482.
 
 A publicação não muda os limites: ainda é necessário testar instalação Bazzite, fluxo completo de autenticação/reserva/streaming, jogos, GPU, controles físicos e recuperação no equipamento do usuário. O usuário optou por realizar esses testes após instalar. Android não foi publicado nesta release; sua auditoria transitiva e assinatura de produção continuam pendentes.
+
+## Assistente guiado de instalação
+
+Implementado em `deploy/setup_host.py`: detecção Bazzite, instalação de dependências nativas ausentes via rpm-ostree, progresso persistente com lock, preservação de transações/deployments pendentes, oferta de reinício, atalho de retomada no menu, ativação dos serviços libvirt/Tailscale, autorização interativa Tailscale e verificação de HTTPS. A conclusão exige serviços ativos, diagnóstico real do helper, HTTPS e estado `available` confirmado no SQLite do HOST.
+
+A [execução 38503734695](https://github.com/FaelSemW/CloudGame/actions/runs/38503734695), revisão 5250b47, passou: 43 testes Python (incluindo terminal Unix real, permissões/symlinks, reinício, falhas de instalação/HTTPS e disponibilidade), 23 testes Node, XML libvirt, nftables em namespaces e integridade do pacote. No Windows, quatro verificações exclusivas de Unix são puladas; o CI Linux executa essas verificações. Instalação real e reinício Bazzite não foram executados neste ambiente. O usuário realizará a validação no equipamento dele.
+
+O novo pacote do assistente é publicado em um caminho versionado para preservar o download e checksum utilizados pelo bootstrap anterior. A release desktop preview já publicada permanece intacta.
