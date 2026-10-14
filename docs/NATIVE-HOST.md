@@ -1,6 +1,6 @@
 # HOST nativo, sem máquina virtual
 
-O instalador do código atual executa Sunshine e Steam no próprio kernel Linux do Bazzite. Não baixa imagem Ubuntu, não inicia QEMU/libvirt e não exige VFIO. Os arquivos do backend antigo permanecem para preservar o histórico; não são executados pelo assistente nativo. O pacote público ainda deve ser atualizado após a verificação de streaming deste backend.
+O instalador atual executa Sunshine e Steam no próprio kernel Linux do Bazzite. Não baixa imagem Ubuntu, não inicia QEMU/libvirt e não exige VFIO. Os arquivos do backend antigo permanecem para preservar o histórico; não são executados pelo assistente nativo. O pacote de testes publicado em `downloads/host-native-preview-1` é o destino do `install.sh` atual.
 
 ## Isolamento e descarte
 
@@ -45,5 +45,7 @@ sudo journalctl -u 'cg-native-*' -b --no-pager
 Recupere pelo painel HOST. Não altere a reserva no SQLite nem remova seu arquivo manualmente: isso contornaria a verificação de descarte.
 
 O workflow `native-host.yml` testa captura Sunshine, pareamento/decodificação Moonlight e descarte em Linux de CI, sem QEMU. A [execução 38589875078](https://github.com/FaelSemW/CloudGame/actions/runs/38589875078), commit 9039ab1, passou com PipeWire isolado. Esse teste não substitui instalação Bazzite, Steam/jogos, entrada, GPU, Android ou rede Tailscale real.
+
+A [verificação final 38590721175](https://github.com/FaelSemW/CloudGame/actions/runs/38590721175), commit e327215, também passou: suíte Python no Linux, criação e validação de arquivo desktop no menu/área de trabalho, pareamento real, frames decodificados e descarte confirmado. Localmente passaram 24 testes Node, checagem de sintaxe e integridade do pacote. Os atalhos não foram visualmente testados no KDE Bazzite.
 
 PipeWire usa um [sink virtual oficial](https://docs.pipewire.org/page_pulse_module_null_sink.html) dentro da sessão; não acessa o servidor de áudio do proprietário. A política WirePlumber desabilita descoberta de hardware e acesso ao logind externo.

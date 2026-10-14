@@ -5,7 +5,7 @@ profile=''
 case "${1:-}" in
     '') ;;
     --software) profile='--software' ;;
-    *) echo 'Opção inválida. Use --software somente para VM com renderização por CPU.' >&2; exit 1 ;;
+    *) echo 'Opção inválida. Use --software para testar a sessão nativa por CPU, sem VM.' >&2; exit 1 ;;
 esac
 if [ "$(uname -s)" != Linux ] || [ "$(uname -m)" != x86_64 ]; then
     echo 'Cloud Game HOST requer Bazzite Linux x86_64.' >&2
@@ -21,8 +21,8 @@ done
 stage=$(mktemp -d)
 trap 'rm -f -- "$stage/cloud-game.pyz"; rmdir -- "$stage"' EXIT HUP INT TERM
 echo 'Baixando Cloud Game e verificando a integridade…'
-curl --fail --show-error --silent --location --proto '=https' --proto-redir '=https'     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads/host-setup-5250b47/cloud-game.pyz
-printf '%s  %s\n' 'e5cc1e54831a6ddcb095b5254edcd2e07536879b0a7d426f2f0ecce60729d231' "$stage/cloud-game.pyz" | sha256sum --check --status
+curl --fail --show-error --silent --location --proto '=https' --proto-redir '=https'     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads/host-native-preview-1/cloud-game.pyz
+printf '%s  %s\n' '590ced71b0f71e032ce8b9b14bc0afa1c7eecb1038e55cbe25bc2b9671241bb9' "$stage/cloud-game.pyz" | sha256sum --check --status
 python3 "$stage/cloud-game.pyz" verify
 # The resumable wizard prepares missing native prerequisites after elevation.
 if [ "$(id -u)" = 0 ]; then

@@ -2,7 +2,7 @@
 
 HOST Bazzite e clientes Android/desktop com integração dos projetos oficiais Sunshine e Moonlight, em desenvolvimento.
 
-**Mudança em andamento: HOST nativo, sem VM.** O código atual prepara Sunshine/Steam em namespaces Linux e desktop separado, sem Ubuntu/QEMU/VFIO. O instalador público abaixo ainda pertence ao backend antigo; aguarde a atualização para testar o modo nativo. [Arquitetura, retomada e limitações do novo backend](docs/NATIVE-HOST.md). Gamepads, biblioteca Steam compartilhada e GPU física ainda não estão homologados neste modo.
+**HOST nativo de testes, sem VM.** O instalador abaixo prepara Sunshine/Steam em namespaces Linux e desktop separado, sem Ubuntu/QEMU/VFIO. Transmissão real, descarte e atalhos passaram no [CI 38590721175](https://github.com/FaelSemW/CloudGame/actions/runs/38590721175). [Arquitetura, retomada e limitações](docs/NATIVE-HOST.md). Gamepads, biblioteca Steam compartilhada e GPU física ainda não estão homologados neste modo.
 
 **Estado: implementação em andamento, ainda não uma V1 homologada.** Os clientes Android, Windows e Linux compilaram e incorporam o motor Moonlight, sem exigir outro aplicativo Moonlight instalado. O HOST agora usa sessões nativas Linux. Instalação Bazzite, jogos, GPU física, controles e streaming Android exigem homologação. Consulte [integração dos clientes e evidências](docs/NATIVE-INTEGRATION.md) e [limites do HOST nativo](docs/NATIVE-HOST.md).
 
@@ -10,7 +10,7 @@ A pasta recebida estava vazia, sem Git ou código a preservar. Esta implementaç
 
 ## Instalar a versão desktop de testes
 
-[Downloads: desktop preview 0.1](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.1). Inclui instalador Windows com Moonlight incorporado, cliente Ubuntu 24.04, pacote HOST, checksums e fontes correspondentes. Os downloads públicos foram conferidos após a publicação.
+[Downloads dos clientes: desktop preview 0.1](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.1). Inclui Windows com Moonlight incorporado e cliente Ubuntu 24.04, checksums e fontes correspondentes. O HOST arquivado nessa release ainda é o antigo backend VM; use o comando abaixo para o HOST nativo atualizado.
 
 Windows, no PowerShell:
 
@@ -24,7 +24,7 @@ HOST Bazzite em VM, no terminal do Bazzite:
 curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh -s -- --software
 ```
 
-Não execute o comando acima enquanto o aviso de atualização pendente estiver no topo. O novo perfil por CPU é para testes, sem VM adicional. O assistente instala dependências via rpm-ostree, salva progresso para reinício, cria atalhos no menu e na área de trabalho e orienta Tailscale/HTTPS. O atalho **Cloud Game HOST** abre o painel; **Cloud Game — continuar instalação** retoma o assistente. Para tentar o perfil de GPU nativa em hardware compatível, remova `--software`. Não inclui jogos.
+O perfil por CPU é para testes, sem VM adicional. O assistente instala dependências via rpm-ostree, salva progresso para reinício, cria atalhos no menu e na área de trabalho e orienta Tailscale/HTTPS. O atalho **Cloud Game HOST** abre o painel; **Cloud Game — continuar instalação** retoma o assistente. Para tentar o perfil de GPU nativa em hardware compatível, remova `--software`. Não inclui jogos.
 
 A release é de testes, não homologação em Bazzite/GPU. Android continua nos artefatos de desenvolvimento e não integra esta release desktop. Instalações existentes são preservadas; não há atualização automática.
 

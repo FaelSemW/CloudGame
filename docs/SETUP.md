@@ -1,6 +1,6 @@
 # Assistente de instalação Bazzite
 
-> **Atualização: o código atual usa [sessões nativas sem VM](NATIVE-HOST.md).** O texto abaixo documenta o instalador VM antigo, ainda presente no pacote público até a publicação da substituição. Não retome o instalador antigo para testar o modo nativo.
+> **Atualização: o instalador público atual usa [sessões nativas sem VM](NATIVE-HOST.md).** O texto abaixo é histórico do instalador VM antigo. Use o guia nativo; não retome a cópia antiga para testar o novo modo.
 
 A CLI pública executa `deploy/setup_host.py`, não interrompe mais só porque QEMU/libvirt/Tailscale estão ausentes. Ela verifica Bazzite por `/etc/os-release`, usa apenas pacotes Fedora fixos e `rpm-ostree install --idempotent --allow-inactive`, e não executa apt/dnf sobre o HOST imutável. O QEMU Flatpak do assistente Bazzite não substitui os serviços nativos exigidos por este backend.
 
