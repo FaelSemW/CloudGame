@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { readFile, mkdir } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { Store, digest, hashPassword } from './store.mjs';
@@ -92,7 +93,11 @@ export async function createApp({ store, backend, origin = 'http://127.0.0.1:878
   server.requestTimeout = 200000; server.headersTimeout = 10000;
   return { server, sessions, setupToken };
 }
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+export function isEntrypoint(moduleUrl, argument) {
+  if (!argument) return false;
+  return realpathSync(fileURLToPath(moduleUrl)) === realpathSync(argument);
+}
+if (isEntrypoint(import.meta.url, process.argv[1])) {
   process.umask(0o077);
   const data = process.env.CG_DATA ?? './data'; await mkdir(data, { recursive: true, mode: 0o700 });
   const store = new Store(`${data}/host.sqlite`);

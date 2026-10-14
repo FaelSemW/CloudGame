@@ -1,11 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, symlinkSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store, hashPassword, verifyPassword } from '../host/store.mjs';
 import { Sessions } from '../host/sessions.mjs';
-import { createApp } from '../host/server.mjs';
+import { createApp, isEntrypoint } from '../host/server.mjs';
+
+test('HOST starts through a directory symlink like Bazzite /opt', t => {
+  const root = mkdtempSync(join(tmpdir(), 'cg-entry-'));
+  t.after(() => rmSync(root, { recursive: true }));
+  const physical = join(root, 'physical'); mkdirSync(physical);
+  const script = join(physical, 'server.mjs'); writeFileSync(script, '');
+  const alias = join(root, 'opt'); symlinkSync(physical, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  assert.equal(isEntrypoint(pathToFileURL(script), join(alias, 'server.mjs')), true);
+  const other = join(physical, 'other.mjs'); writeFileSync(other, '');
+  assert.equal(isEntrypoint(pathToFileURL(script), other), false);
+  assert.equal(isEntrypoint(pathToFileURL(script), undefined), false);
+});
 
 // Test-only fault injection. Production has no simulated backend or available fallback.
 class FaultBackend {
