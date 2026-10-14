@@ -18,7 +18,7 @@ class ReleaseTests(unittest.TestCase):
         script = release.installer('https://example.org/releases/0.1', 'a' * 64)
         self.assertIn('https://example.org/releases/0.1/cloud-game.pyz', script)
         self.assertLess(script.index('sha256sum --check'), script.index('pkexec /usr/bin'))
-        self.assertLess(script.index('" doctor'), script.index('pkexec /usr/bin'))
+        self.assertLess(script.index('" verify'), script.index('pkexec /usr/bin'))
         self.assertNotIn('--lab', script)
         self.assertIn("--proto-redir '=https'", script)
 

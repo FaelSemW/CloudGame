@@ -79,11 +79,11 @@ def main():
             shutil.copytree(source, lab)
             print('Controle local instalado. Streaming indisponível neste modo.')
         else:
-            if doctor(args.software) != 0:
-                raise RuntimeError('Pré-requisitos ausentes. Use install --lab para testar o painel na VM; consulte docs/BAZZITE.md para o HOST.')
             if os.geteuid() != 0:
                 raise RuntimeError('Para o HOST de produção use: sudo python3 cloud-game.pyz install')
-            return subprocess.call([sys.executable, str(source / 'deploy/install_host.py')] + (['--software'] if args.software else []))
+            sys.path.insert(0, str(source / 'deploy'))
+            from setup_host import start
+            return start(source, args.software)
     return subprocess.call([sys.executable, str(Path(sys.argv[0]).resolve()), 'run'])
 
 

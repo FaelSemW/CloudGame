@@ -43,8 +43,7 @@ curl --fail --show-error --silent --location --proto '=https' --proto-redir '=ht
     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" {download}
 printf '%s  %s\\n' '{digest}' "$stage/cloud-game.pyz" | sha256sum --check --status
 python3 "$stage/cloud-game.pyz" verify
-# Preflight must finish before elevation or filesystem installation.
-python3 "$stage/cloud-game.pyz" doctor $profile
+# The resumable wizard prepares missing native prerequisites after elevation.
 if [ "$(id -u)" = 0 ]; then
     python3 "$stage/cloud-game.pyz" install $profile
 elif command -v pkexec >/dev/null 2>&1; then

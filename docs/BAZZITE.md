@@ -113,3 +113,7 @@ O serviço de rede identifica sua bridge com o alias `cloud-game-managed-v1` e r
 Quando firewalld está ativo, a configuração exige a zona `libvirt` e associa somente `cgbr0` a ela, em runtime e permanentemente. Confere conflitos nas duas configurações antes de escrever. Não executa reload global nem modifica a zona de `tailscale0`. As regras restritivas CloudGame são instaladas antes de ativar a bridge; portas administrativas do guest continuam bloqueadas. Configurações personalizadas, como políticas adicionais ou StrictForwardPorts, podem impedir tráfego e exigem homologação; o script não as desativa.
 
 Referências: [rede e firewalld no libvirt](https://libvirt.org/firewall.html), [comandos de zonas firewalld](https://firewalld.org/documentation/man-pages/firewall-cmd.html). O teste CI de nftables usa namespaces sem firewalld e não comprova essa convivência no Bazzite.
+
+### Assistente guiado (atualização)
+
+O bootstrap público agora prepara automaticamente os pacotes nativos ausentes via rpm-ostree, ativa virtualização/Tailscale e guia a autorização de rede e HTTPS. A preparação manual descrita acima permanece como referência técnica, não como requisito para executar a CLI. Consulte [SETUP.md](SETUP.md) para reinício, retomada pelo menu e limites de recuperação.

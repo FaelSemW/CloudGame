@@ -140,6 +140,7 @@ def install(software=False):
     run('systemctl', 'enable', '--now', 'cloud-game.service', 'cloud-game-watchdog.timer')
     # Background HTTPS stays inside the tailnet; no Funnel or router port is enabled.
     run('tailscale', 'serve', '--bg', '--https=443', 'http://127.0.0.1:8787')
+    write(config / 'installed.json', json.dumps({'installer': 'cloud-game-v1', 'profile': vm['profile']}), 0o600)
     print(json.dumps({'url': 'https://' + dns, 'image': str(base),
         'profile': vm['profile'], 'state': 'installed; HOST recovery determines availability',
         'next': 'Crie o administrador no endereço privado e consulte o diagnóstico. O perfil software tem desempenho limitado e não valida GPU física.'}))

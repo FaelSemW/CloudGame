@@ -22,7 +22,7 @@ HOST Bazzite em VM, no terminal do Bazzite:
 curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh -s -- --software
 ```
 
-O perfil por CPU é para testes e tem desempenho limitado. **Antes do HOST:** ferramentas nativas QEMU/libvirt e Tailscale/HTTPS precisam estar disponíveis; consulte [pré-requisitos e instalação](docs/BAZZITE.md). O instalador baixa e prepara Sunshine/Steam/Xfce em uma VM isolada. Não inclui jogos. Para GPU dedicada já preparada para VFIO, remova `--software`.
+O perfil por CPU é para testes e tem desempenho limitado. O assistente instala as dependências nativas ausentes via rpm-ostree, salva o progresso antes de um reinício e cria o atalho **Cloud Game — continuar instalação** no menu. Ele ativa libvirt/Tailscale, mostra o link de login e orienta a autorização de HTTPS. Consulte o [fluxo guiado](docs/SETUP.md). O instalador baixa e prepara Sunshine/Steam/Xfce em uma VM isolada. Não inclui jogos. Para GPU dedicada já preparada para VFIO, remova `--software`.
 
 A release é de testes, não homologação em Bazzite/GPU. Android continua nos artefatos de desenvolvimento e não integra esta release desktop. Instalações existentes são preservadas; não há atualização automática.
 

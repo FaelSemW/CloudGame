@@ -4,7 +4,7 @@ O pacote HOST atual inclui o serviço de controle, painel, isolamento QEMU/libvi
 
 ## HOST Bazzite
 
-Depois de preparar os pré-requisitos em [BAZZITE.md](BAZZITE.md), execute no terminal do Bazzite:
+Execute no terminal do Bazzite; o [assistente guiado](SETUP.md) prepara as dependências:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh | sh
@@ -18,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.sh 
 
 O instalador verifica a integridade, confere ferramentas, pede elevação administrativa, prepara a imagem e valida um novo boot antes de configurar os serviços. O perfil software transmite vídeo real usando CPU, com desempenho limitado. A VM de testes precisa ter memória e espaço suficientes para executar uma segunda VM; não equivale ao desempenho de um PC com GPU.
 
-**Limites atuais:** ferramentas nativas libvirt/QEMU, Tailscale conectado e HTTPS da tailnet ainda precisam estar disponíveis previamente. A CLI recusa conflitos e preserva instalações existentes; não implementa atualização automática. Instalação em Bazzite, GPU física e convivência com políticas particulares de firewall continuam pendentes de homologação. O pipeline já comprovou provisionamento, streaming nativo Linux por CPU e descarte entre boots.
+**Fluxo guiado:** ferramentas nativas ausentes são instaladas via rpm-ostree; reinício tem progresso salvo e retomada pelo menu. Tailscale é ativado e pede sua autorização pelo navegador. O assistente orienta MagicDNS/HTTPS e verifica o certificado antes de instalar o HOST. A CLI recusa conflitos e preserva instalações existentes; não implementa atualização automática. Instalação em Bazzite, GPU física e convivência com políticas particulares de firewall continuam pendentes de homologação. O pipeline já comprovou provisionamento, streaming nativo Linux por CPU e descarte entre boots.
 
 A imagem não inclui jogos nem credenciais Steam. Jogos autorizados são preparados na base persistente conforme BAZZITE.md; login do jogador acontece apenas na interface oficial da Steam dentro da sessão.
 
