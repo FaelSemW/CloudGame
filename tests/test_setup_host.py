@@ -15,6 +15,21 @@ spec.loader.exec_module(wizard)
 
 
 class SetupTests(unittest.TestCase):
+    def test_firewalld_serialization_and_managed_interface_are_preserved(self):
+        self.assertTrue(wizard.native_zone_compatible('''<?xml version="1.0"?>
+<zone target="ACCEPT">
+  <short>Cloud Game</short>
+  <description>Native isolated session</description>
+  <interface name="cgbr0"/>
+  <forward/>
+</zone>'''))
+
+    def test_different_firewall_policy_still_blocks_resume(self):
+        for value in ('<zone target="DROP"/>', '<zone target="ACCEPT"><interface name="eth0"/></zone>',
+                      '<zone target="ACCEPT"><service name="ssh"/></zone>',
+                      '<zone target="ACCEPT"><source address="10.0.0.0/8"/></zone>', 'broken'):
+            self.assertFalse(wizard.native_zone_compatible(value))
+
     def test_completion_requires_real_host_database_availability(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'host.sqlite'

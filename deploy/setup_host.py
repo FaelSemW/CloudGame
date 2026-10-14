@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import xml.etree.ElementTree as ET
 
 ROOT = Path('/var/lib/cloud-game-native-installer')
 STATE = ROOT / 'state.json'
@@ -67,6 +68,30 @@ def owned_write(path, content, mode=0o644):
     with open(path, 'x', opener=lambda p, f: os.open(p, f | os.O_NOFOLLOW, mode)) as stream:
         stream.write(content)
     path.chmod(mode)
+
+
+def native_zone_compatible(text):
+    """Firewalld rewrites XML and records our bridge when the service starts."""
+    try: zone = ET.fromstring(text)
+    except ET.ParseError: return False
+    if zone.tag != 'zone' or zone.attrib != {'target': 'ACCEPT'}: return False
+    for child in zone:
+        if child.tag in ('short', 'description') and not child.attrib and not list(child): continue
+        if child.tag == 'interface' and child.attrib == {'name': 'cgbr0'} and not list(child): continue
+        if child.tag == 'forward' and not child.attrib and not list(child): continue
+        return False
+    return True
+
+
+def ensure_native_zone():
+    path = Path('/etc/firewalld/zones/cloud-game.xml')
+    if path.exists() or path.is_symlink():
+        from vm_helper import trusted
+        trusted(path.parent, True); trusted(path)
+        if not native_zone_compatible(path.read_text()):
+            raise RuntimeError('Zona cloud-game possui regras diferentes; configuração preservada para revisão: ' + str(path))
+        return
+    owned_write(path, '<?xml version="1.0" encoding="utf-8"?>\n<zone target="ACCEPT"><short>Cloud Game</short><description>Native isolated session; access restricted by the cloud_game nftables table.</description></zone>\n')
 
 
 def ask(message):
@@ -246,8 +271,7 @@ def start(source=None, software=False):
                     '[Desktop Entry]\nType=Application\nName=Cloud Game — continuar instalação\nExec=' + launcher + '\nTerminal=true\nCategories=System;\n')
         from launchers import install_for_user
         install_for_user(state.get('desktopUid'), 'setup')
-        owned_write(Path('/etc/firewalld/zones/cloud-game.xml'),
-                    '<?xml version="1.0" encoding="utf-8"?>\n<zone target="ACCEPT"><short>Cloud Game</short><description>Native isolated session; access restricted by the cloud_game nftables table.</description></zone>\n')
+        ensure_native_zone()
         # Resume always uses the persisted version, including after another download.
         if source:
             fcntl.flock(lock, fcntl.LOCK_UN)

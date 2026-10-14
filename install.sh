@@ -21,8 +21,8 @@ done
 stage=$(mktemp -d)
 trap 'rm -f -- "$stage/cloud-game.pyz"; rmdir -- "$stage"' EXIT HUP INT TERM
 echo 'Baixando Cloud Game e verificando a integridade…'
-curl --fail --show-error --silent --location --proto '=https' --proto-redir '=https'     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads/host-native-preview-1/cloud-game.pyz
-printf '%s  %s\n' '590ced71b0f71e032ce8b9b14bc0afa1c7eecb1038e55cbe25bc2b9671241bb9' "$stage/cloud-game.pyz" | sha256sum --check --status
+curl --fail --show-error --silent --location --proto '=https' --proto-redir '=https'     --connect-timeout 20 --max-time 300 --output "$stage/cloud-game.pyz" https://raw.githubusercontent.com/FaelSemW/CloudGame/main/downloads/host-native-preview-2/cloud-game.pyz
+printf '%s  %s\n' 'bb880fc697678c1c9bf916116b6c1ce594468e5f17ac62ebcb21ac5f13ae98a8' "$stage/cloud-game.pyz" | sha256sum --check --status
 python3 "$stage/cloud-game.pyz" verify
 # The resumable wizard prepares missing native prerequisites after elevation.
 if [ "$(id -u)" = 0 ]; then
