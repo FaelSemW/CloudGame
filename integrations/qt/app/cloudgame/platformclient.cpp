@@ -139,11 +139,11 @@ void PlatformClient::login(QString origin, QString username, QString password) {
 void PlatformClient::refresh() {
     if (!m_Authenticated || m_Refreshing || m_Busy) return;
     m_Refreshing = true;
-    request("status", {}, false, [this](QJsonObject value) { m_Status = value; m_Message = value.value("error").toString(); emit changed(); });
+    request("status", {}, false, [this](QJsonObject value) { m_Status = value; if (!value.value("error").toString().isEmpty()) m_Message = value.value("error").toString(); emit changed(); });
 }
 void PlatformClient::reserve() {
     if (m_Busy || !m_Authenticated || m_Status.value("state") != "available") return;
-    m_Busy = true; emit changed();
+    m_Busy = true; m_Message.clear(); emit changed();
     request("session/start", {}, true, [this](QJsonObject) { m_Busy = false; refresh(); emit changed(); });
 }
 void PlatformClient::endSession() {

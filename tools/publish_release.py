@@ -37,9 +37,11 @@ def publish(manifest_path):
         assets.append((name, path, item['sha256']))
     required = {'CloudGame-Setup.exe', 'cloud-game.pyz', 'SHA256SUMS',
                 'qt-everywhere-src-6.12.0.tar.xz', 'CloudGame-Vulkan-SDK-sources.tar',
-                'CloudGame-Windows-sources-451a5dd.tar.gz', 'CloudGame-Desktop-sources.tar.gz'}
+                'CloudGame-Desktop-sources.tar.gz'}
     if not required.issubset(names):
         raise ValueError('Missing binary or corresponding sources')
+    if not any(re.fullmatch(r'CloudGame-Windows-sources-[a-f0-9]{7,40}\.tar\.gz', name) for name in names):
+        raise ValueError('Missing versioned Windows corresponding sources')
     releases = json.loads(request('releases?per_page=100'))
     existing = next((release for release in releases if release['tag_name'] == tag), None)
     if existing and not existing['draft']:

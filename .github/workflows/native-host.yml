@@ -1,6 +1,11 @@
 name: Verify native HOST without virtual machines
 on:
   workflow_dispatch:
+    inputs:
+      client_run:
+        description: Successful native-clients run providing the Linux client
+        default: '38270190388'
+        required: true
 permissions:
   contents: read
   actions: read
@@ -13,7 +18,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: cloud-game-linux-package-and-startup
-          run-id: 38270190388
+          run-id: ${{ inputs.client_run }}
           github-token: ${{ github.token }}
           path: build/native-client
       - name: Install native session prerequisites in disposable runner
