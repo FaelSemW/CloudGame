@@ -33,6 +33,8 @@ def firewall_plan():
     active = subprocess.run(['systemctl', 'is-active', '--quiet', 'firewalld'], timeout=10)
     if active.returncode == 3:
         return []
+    if active.returncode == 4 and run('systemctl', 'show', '--property=LoadState', '--value', 'firewalld.service') == 'not-found':
+        return []
     if active.returncode != 0:
         raise RuntimeError('Não foi possível determinar o estado do firewalld.')
     if not shutil.which('firewall-cmd'):

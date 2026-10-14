@@ -92,6 +92,8 @@ def sandbox(directory, c, account):
     args += ['--clearenv', '--setenv', 'PATH', '/usr/bin:/bin',
              '--setenv', 'HOME', '/home/player', '--setenv', 'USER', ACCOUNT,
              '--setenv', 'LOGNAME', ACCOUNT, '--setenv', 'LANG', 'C.UTF-8',
+             '--setenv', 'SDL_VIDEODRIVER', 'x11', '--setenv', 'GDK_BACKEND', 'x11',
+             '--setenv', 'QT_QPA_PLATFORM', 'xcb',
              '--setenv', 'XDG_RUNTIME_DIR', '/run/user/' + str(account.pw_uid),
              '--chdir', '/home/player', '/usr/bin/python3',
              '/opt/cloud-game/deploy/native_desktop.py', c['renderer']]
@@ -166,6 +168,7 @@ def start(sid, peer):
     shutil.copyfile('/opt/cloud-game/deploy/apps.json', settings / 'apps.json')
     (settings / 'sunshine.conf').write_text(
         'sunshine_name = Cloud Game\nupnp = disabled\naddress_family = ipv4\norigin_web_ui_allowed = lan\n'
+        'controller = disabled\n'
         'capture = ' + ('x11' if config()['renderer'] == 'software' else 'wlr') + '\n'
         'file_apps = /home/player/.config/sunshine/apps.json\n'
         'file_state = /home/player/.config/sunshine/sunshine_state.json\n')
