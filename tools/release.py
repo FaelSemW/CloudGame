@@ -23,7 +23,7 @@ profile=''
 case "${{1:-}}" in
     '') ;;
     --software) profile='--software' ;;
-    *) echo 'Opção inválida. Use --software somente para VM com renderização por CPU.' >&2; exit 1 ;;
+    *) echo 'Opção inválida. Use --software para testar a sessão nativa por CPU, sem VM.' >&2; exit 1 ;;
 esac
 if [ "$(uname -s)" != Linux ] || [ "$(uname -m)" != x86_64 ]; then
     echo 'Cloud Game HOST requer Bazzite Linux x86_64.' >&2

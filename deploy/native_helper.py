@@ -221,7 +221,11 @@ def recover():
     if NS in namespaces:
         if run('ip', 'netns', 'pids', NS): raise RuntimeError('Processos ainda ligados ao namespace.')
         run('ip', 'netns', 'delete', NS)
-    if Path('/sys/class/net/' + LINK).exists(): run('ip', 'link', 'delete', LINK)
+    if Path('/sys/class/net/' + LINK).exists():
+        try: run('ip', 'link', 'delete', LINK)
+        except RuntimeError:
+            # Deleting a netns asynchronously removes its veth peer too.
+            if Path('/sys/class/net/' + LINK).exists(): raise
     target = VOL / sid
     if target.is_symlink(): raise RuntimeError('Diretório temporário inválido.')
     if not shutil.rmtree.avoids_symlink_attacks: raise RuntimeError('Limpeza segura indisponível.')

@@ -28,7 +28,7 @@ def validate_network(links, routes):
     return bridge is not None
 
 
-def firewall_plan():
+def firewall_plan(zone_name=None):
     """Read both configurations before any mutation; never reload all rules."""
     active = subprocess.run(['systemctl', 'is-active', '--quiet', 'firewalld'], timeout=10)
     if active.returncode == 3:
@@ -39,7 +39,7 @@ def firewall_plan():
         raise RuntimeError('Não foi possível determinar o estado do firewalld.')
     if not shutil.which('firewall-cmd'):
         raise RuntimeError('firewalld ativo, mas firewall-cmd ausente.')
-    zone_name = 'cloud-game' if __import__('pathlib').Path('/etc/cloud-game/native.json').exists() else 'libvirt'
+    zone_name = zone_name or ('cloud-game' if __import__('pathlib').Path('/etc/cloud-game/native.json').exists() else 'libvirt')
     commands = []
     for scope in [(), ('--permanent',)]:
         zones = run('firewall-cmd', *scope, '--get-zones').split()

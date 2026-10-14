@@ -3,22 +3,34 @@ import json
 import os
 from pathlib import Path
 import pwd
+import re
 import shutil
 from install_host import run, write, trusted_directory, serve_available, SOURCE, DEST
 
 
 def install(software=False):
     if os.geteuid() != 0: raise RuntimeError('Instalação requer root.')
-    if DEST.exists(): raise RuntimeError('Instalação anterior preservada; migração precisa de revisão.')
+    if DEST.exists() or DEST.is_symlink(): raise RuntimeError('Instalação anterior preservada; migração precisa de revisão.')
+    outputs = [Path('/etc/systemd/system') / name for name in (
+        'cloud-game.service', 'cloud-game-network.service', 'cloud-game-watchdog.service',
+        'cloud-game-watchdog.timer', 'var-lib-cloudgame-native\\x2dvolatile.mount')]
+    outputs += [Path('/etc/cloud-game') / name for name in ('native.json', 'host.env', 'installed.json')]
+    outputs += [Path('/etc/sudoers.d/cloud-game')]
+    for output in outputs:
+        if output.exists() or output.is_symlink(): raise RuntimeError('Configuração existente preservada: ' + str(output))
     for command in ('bwrap', 'sunshine', 'steam', 'sway', 'pulseaudio', 'nft', 'tailscale'):
         if not shutil.which(command): raise RuntimeError('Componente ausente: ' + command)
     info = json.loads(run('tailscale', 'status', '--json'))
     dns = info.get('Self', {}).get('DNSName', '').rstrip('.')
     from native_helper import peer_ip
     address = next((ip for ip in info.get('Self', {}).get('TailscaleIPs', []) if ip.startswith('100.')), None)
-    if not dns.endswith('.ts.net') or not address: raise RuntimeError('Tailscale não está pronto.')
+    if not re.fullmatch(r'[a-z0-9.-]+\.ts\.net', dns) or not address: raise RuntimeError('Tailscale não está pronto.')
     peer_ip(address)
     serve_available(json.loads(run('tailscale', 'serve', 'status', '--json')))
+    from network_setup import validate_network, firewall_plan
+    validate_network(json.loads(run('ip', '-details', '-json', 'link', 'show')),
+                     json.loads(run('ip', '-json', '-4', 'route', 'show', 'table', 'all')))
+    firewall_plan('cloud-game')
     root = Path('/var/lib/cloudgame'); trusted_directory(root)
     root.chmod(0o751)
     if (root / 'runtime.json').exists(): raise RuntimeError('Sessão VM anterior ainda registrada.')

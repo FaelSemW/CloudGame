@@ -30,22 +30,21 @@ def unpack(destination):
 def doctor(software=False):
     release = Path('/etc/os-release')
     bazzite = release.exists() and 'bazzite' in release.read_text().lower()
-    requirements = ('python3', 'virsh', 'qemu-img', 'qemu-system-x86_64', 'nft', 'tailscale', 'sudo', 'restorecon', 'semanage')
+    requirements = ('python3', 'bwrap', 'sunshine', 'steam', 'pulseaudio', 'nft', 'tailscale', 'sudo', 'Xvfb' if software else 'sway')
     result = {'system': platform.system(), 'architecture': platform.machine(),
-              'bazzite': bazzite, 'kvm': Path('/dev/kvm').exists(),
+              'bazzite': bazzite, 'backend': 'native', 'renderNodes': [str(p) for p in Path('/dev/dri').glob('renderD*')],
               'tools': {name: bool(shutil.which(name)) for name in requirements},
-              'template': Path('/var/lib/cloudgame/base.qcow2').is_file(),
               'note': 'Esta verificação não comprova GPU, isolamento ou streaming. Consulte docs/ACCEPTANCE.md.'}
-    result['profile'] = 'software' if software else 'vfio'
+    result['profile'] = 'software' if software else 'gpu'
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    return 0 if bazzite and (software or result['kvm']) and all(result['tools'].values()) else 2
+    return 0 if bazzite and (software or result['renderNodes']) and all(result['tools'].values()) else 2
 
 
 def main():
     parser = argparse.ArgumentParser(description='Cloud Game 0.1 — pacote de avaliação, streaming ainda não homologado.')
     parser.add_argument('command', choices=['verify', 'doctor', 'install', 'run', 'logs'])
     parser.add_argument('--lab', action='store_true', help='Instala apenas o controle local; streaming bloqueado explicitamente.')
-    parser.add_argument('--software', action='store_true', help='VM isolada com renderização/encoding por CPU; desempenho limitado, sem passthrough.')
+    parser.add_argument('--software', action='store_true', help='Sessão nativa com renderização/encoding por CPU para testes; sem VM, desempenho limitado.')
     args = parser.parse_args()
     if args.command == 'doctor':
         return doctor(args.software)

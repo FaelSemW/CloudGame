@@ -26,13 +26,15 @@ def run_desktop(mode):
             # The compositor sets WAYLAND_DISPLAY and DISPLAY for this exec child.
             if not os.environ.get('WAYLAND_DISPLAY'): raise RuntimeError('Compositor Wayland ausente.')
         else: raise RuntimeError('Perfil desconhecido.')
-        subprocess.run(['pulseaudio', '--start', '--exit-idle-time=-1'], check=True)
+        processes.append(subprocess.Popen([
+            'pulseaudio', '--daemonize=no', '--log-target=stderr', '--exit-idle-time=-1',
+            '-n', '-L', 'module-native-protocol-unix',
+            '-L', 'module-null-sink sink_name=cloudgame']))
         for attempt in range(100):
             if subprocess.run(['pactl', 'info'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
                 break
             time.sleep(.1)
         else: raise RuntimeError('Áudio temporário não iniciou.')
-        subprocess.run(['pactl', 'load-module', 'module-null-sink', 'sink_name=cloudgame'], check=True)
         subprocess.run(['pactl', 'set-default-sink', 'cloudgame'], check=True)
         subprocess.run(['pactl', 'set-default-source', 'cloudgame.monitor'], check=True)
         password = (HOME / '.sunshine-bootstrap').read_text()

@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 export class Backend {
   async call(op, args = {}) {
-    if (process.env.CG_LAB === '1') throw new Error('Laboratório: apenas o controle local está instalado. Streaming requer HOST Bazzite com KVM, GPU dedicada e imagem preparada.');
+    if (process.env.CG_LAB === '1') throw new Error('Laboratório: apenas o controle local está instalado. Streaming requer o HOST Bazzite e os componentes de sessão nativa.');
     if (process.platform !== 'linux') throw new Error('O HOST requer Linux/Bazzite.');
     const helper = process.env.CG_BACKEND === 'vm' ? 'vm_helper.py' : 'native_helper.py';
     return new Promise((resolve, reject) => {
