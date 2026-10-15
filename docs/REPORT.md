@@ -1,5 +1,7 @@
 # Relatório de implementação
 
+Atualização desktop: a preview 2 instala Tailscale junto ao cliente Windows, orienta autorização pelo navegador e mostra o IPv4 do jogador. Corrige o cache de identidade Sunshine entre sessões descartáveis, testa acesso à porta de descoberta, limita esperas e preserva o erro na interface. O pacote final passou em instalação/inicialização/desinstalação Windows no run 38671884226; transmissão real e limpeza nativa passaram no run 38636161945. O HOST atual é nativo, **sem VM**, descrito em [NATIVE-HOST.md](NATIVE-HOST.md). As seções seguintes registram implementações e evidências históricas, inclusive do backend VM substituído. GPU Bazzite, jogos Windows pela rede privada, gamepads e VPN Android continuam pendentes de homologação.
+
 ## Situação da entrega
 
 **V1 ainda incompleta e não homologada.** Foi implementado um caminho real de controle e um backend Linux que chama libvirt/QEMU/nftables/Sunshine, sem streaming simulado. A execução disponível foi Windows, portanto o backend de hardware não pôde ser exercitado. Não foi transmitido um jogo nesta sessão de desenvolvimento.

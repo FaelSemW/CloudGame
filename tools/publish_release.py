@@ -75,7 +75,7 @@ def publish(manifest_path):
             connection.close()
     # No public binary is exposed until the entire source/binary set is present.
     result = json.loads(request(f'releases/{release["id"]}', 'PATCH',
-                               {'draft': False, 'prerelease': True, 'body': manifest['body']}))
+                               {'draft': False, 'prerelease': True, 'target_commitish': commit, 'body': manifest['body']}))
     print(result['html_url'])
 
 

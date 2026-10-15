@@ -1,19 +1,19 @@
-# Cloud Game integrated desktop preview. The HOST has separate prerequisites.
+﻿# Cloud Game integrated desktop preview. The HOST has separate prerequisites.
 $ErrorActionPreference = 'Stop'
 $repository = 'FaelSemW/CloudGame'
-$version = 'v0.1.0-desktop-preview.1'
+$version = 'v0.1.0-desktop-preview.2'
 $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repository/releases/tags/$version" -Headers @{'User-Agent'='CloudGame-Installer'}
-if ($release.draft -or $release.tag_name -ne $version) { throw 'Versão de distribuição inválida.' }
-Write-Host 'CloudGame desktop integrado — versão de testes. Configure o HOST Bazzite antes de jogar.'
+if ($release.draft -or $release.tag_name -ne $version) { throw 'VersÃ£o de distribuiÃ§Ã£o invÃ¡lida.' }
+Write-Host 'CloudGame desktop integrado â€” versÃ£o de testes. Configure o HOST Bazzite antes de jogar.'
 $setup = @($release.assets | Where-Object name -EQ 'CloudGame-Setup.exe')
 $checksums = @($release.assets | Where-Object name -EQ 'SHA256SUMS')
 if ($setup.Count -ne 1 -or $checksums.Count -ne 1) {
-    throw 'Nenhuma versão desktop completa foi publicada. O instalador não usará um pacote de painel como substituto.'
+    throw 'Nenhuma versÃ£o desktop completa foi publicada. O instalador nÃ£o usarÃ¡ um pacote de painel como substituto.'
 }
 foreach ($asset in @($setup[0], $checksums[0])) {
     $url = [uri]$asset.browser_download_url
     if ($url.Scheme -ne 'https' -or $url.Host -ne 'github.com' -or -not $url.AbsolutePath.StartsWith("/$repository/releases/download/")) {
-        throw 'URL de distribuição inválida.'
+        throw 'URL de distribuiÃ§Ã£o invÃ¡lida.'
     }
 }
 $stage = Join-Path ([IO.Path]::GetTempPath()) ('CloudGame-' + [guid]::NewGuid().ToString('N'))
@@ -25,11 +25,11 @@ try {
     Invoke-WebRequest -Uri $checksums[0].browser_download_url -OutFile $hashFile -UseBasicParsing
     $match = [regex]::Match((Get-Content -LiteralPath $hashFile -Raw), '(?m)^([a-fA-F0-9]{64})  CloudGame-Setup\.exe\r?$')
     if (-not $match.Success -or (Get-FileHash -LiteralPath $setupFile -Algorithm SHA256).Hash -ne $match.Groups[1].Value) {
-        throw 'A integridade do instalador não foi confirmada.'
+        throw 'A integridade do instalador nÃ£o foi confirmada.'
     }
     $process = Start-Process -FilePath $setupFile -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru -WindowStyle Hidden
-    if ($process.ExitCode -ne 0) { throw "Instalação falhou, código $($process.ExitCode)." }
-    Write-Host 'Cloud Game instalado. Abra pelo menu Iniciar e informe o endereço privado do seu HOST.'
+    if ($process.ExitCode -ne 0) { throw "InstalaÃ§Ã£o falhou, cÃ³digo $($process.ExitCode)." }
+    Write-Host 'Cloud Game instalado. Abra pelo menu Iniciar e informe o endereÃ§o privado do seu HOST.'
 } finally {
     # Only the two fixed files created by this invocation; no recursive deletion.
     foreach ($name in @('CloudGame-Setup.exe','SHA256SUMS')) {

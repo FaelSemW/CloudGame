@@ -10,13 +10,23 @@ A pasta recebida estava vazia, sem Git ou código a preservar. Esta implementaç
 
 ## Instalar a versão desktop de testes
 
-[Downloads dos clientes: desktop preview 0.1](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.1). Inclui Windows com Moonlight incorporado e cliente Ubuntu 24.04, checksums e fontes correspondentes. O HOST arquivado nessa release ainda é o antigo backend VM; use o comando abaixo para o HOST nativo atualizado.
+[Downloads: desktop preview 2](https://github.com/FaelSemW/CloudGame/releases/tag/v0.1.0-desktop-preview.2). Windows com Moonlight incorporado e instalação conjunta do Tailscale, cliente Ubuntu 24.04 e HOST nativo sem VM. Inclui checksums e fontes correspondentes. Consulte [autorização da rede, acesso de amigos e diagnóstico](docs/CLIENT-NETWORK.md).
 
 Windows, no PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/FaelSemW/CloudGame/main/install.ps1 | iex
 ```
+
+Depois, abra Cloud Game → **Conectar rede privada**, conclua a autorização no navegador e clique em **Verificar rede**. O administrador deve cadastrar o IPv4 mostrado no usuário do jogador, no painel do HOST. Informe o HTTPS do HOST e as credenciais Cloud Game. Cada amigo recebe um usuário próprio; a máquina atende um jogador por vez.
+
+Cliente Ubuntu 24.04 x86_64 (não executar no HOST Bazzite):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/FaelSemW/CloudGame/main/deploy/install_client_linux.py | sudo python3 -
+```
+
+Instalação, abertura e desinstalação do pacote Windows passaram no [CI 38671884226](https://github.com/FaelSemW/CloudGame/actions/runs/38671884226). A instalação conjunta Linux passou no [job 116098182863](https://github.com/FaelSemW/CloudGame/actions/runs/38635703582/job/116098182863). Transmissão H.264 por CPU e descarte nativo passaram no [CI 38636161945](https://github.com/FaelSemW/CloudGame/actions/runs/38636161945). Isso não comprova jogo no Windows pela rede privada, GPU física ou gamepads.
 
 HOST Bazzite em VM, no terminal do Bazzite:
 
