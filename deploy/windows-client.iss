@@ -44,9 +44,9 @@ begin
   Result := '';
   ResultCode := -1;
   ExtractTemporaryFile('ensure-tailscale.ps1');
-  if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+  if not ExecAndLogOutput(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
     '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\ensure-tailscale.ps1') + '"',
-    '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    '', SW_HIDE, ewWaitUntilTerminated, ResultCode, nil) then
     Result := 'Não foi possível preparar a rede privada Tailscale.';
   if ResultCode <> 0 then
     Result := 'A instalação do Tailscale não foi concluída. Verifique a internet e autorize a instalação administrativa. Nenhuma chave compartilhada é necessária.';

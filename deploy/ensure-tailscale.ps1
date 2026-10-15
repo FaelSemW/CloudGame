@@ -1,6 +1,8 @@
 # Installs the official network service. No shared enrollment credentials.
 $ErrorActionPreference = 'Stop'
-$cli = Join-Path $env:ProgramFiles 'Tailscale\tailscale.exe'
+$programRoot = $env:ProgramW6432
+if (-not $programRoot) { $programRoot = $env:ProgramFiles }
+$cli = Join-Path $programRoot 'Tailscale\tailscale.exe'
 if (Test-Path -LiteralPath $cli -PathType Leaf) { exit 0 }
 $stage = Join-Path ([IO.Path]::GetTempPath()) ('CloudGame-Network-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $stage | Out-Null

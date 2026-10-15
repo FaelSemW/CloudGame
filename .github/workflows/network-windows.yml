@@ -1,0 +1,20 @@
+name: Verify Windows network installer
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  network:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install official Tailscale dependency
+        shell: powershell
+        run: ./deploy/ensure-tailscale.ps1
+      - name: Check installed network service without enrolling a device
+        shell: pwsh
+        run: |
+          if (!(Test-Path "$env:ProgramFiles\Tailscale\tailscale.exe")) { throw 'Missing Tailscale' }
+          $service = Get-Service Tailscale
+          if ($service.Status -ne 'Running') { throw 'Network service is not running' }

@@ -122,6 +122,7 @@ jobs:
           path: dist/CloudGame-Setup.exe
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: cloud-game-windows-build-internal
           path: third_party/moonlight-qt/build/deploy-x64-release/**
