@@ -1,6 +1,11 @@
 name: Package verified Windows client with current distribution notices
 on:
   workflow_dispatch:
+    inputs:
+      client_run:
+        description: Native client build run supplying the Windows binaries
+        default: '38670856421'
+        required: true
 permissions:
   contents: read
   actions: read
@@ -12,7 +17,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: cloud-game-windows-build-internal
-          run-id: 38316442440
+          run-id: ${{ inputs.client_run }}
           github-token: ${{ github.token }}
           path: build/native-client
       - name: Verify Microsoft runtime redistribution provenance

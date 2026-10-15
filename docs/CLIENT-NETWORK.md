@@ -18,6 +18,8 @@ Uma chave de cadastro não é uma licença permanente: sua expiração e a expir
 
 ## Conexão sem imagem
 
+Para liberar amigos, o administrador deve autorizar cada dispositivo na rede privada e criar um usuário Cloud Game separado no painel do HOST, com senha de pelo menos 12 caracteres e o IPv4 daquele dispositivo. Envie a cada amigo o endereço HTTPS do HOST e as próprias credenciais por um canal privado. Não compartilhe a conta administrativa nem uma chave de cadastro da rede. O mesmo HOST atende um jogador por vez; os demais veem **Ocupado**. Ao terminar, use **Encerrar e descartar ambiente**, depois aguarde o HOST confirmar **Disponível** antes de outro jogador entrar.
+
 O cliente verifica a porta de descoberta do Sunshine antes do pareamento. Quando o painel responde mas essa porta não responde, revise o IPv4 autorizado, as regras Tailscale e o firewall do HOST. O teste TCP não comprova transporte UDP, codificação ou decodificação de vídeo.
 
 Cada sessão descartável cria uma identidade Sunshine nova. Antes do primeiro pareamento da sessão, o cliente remove apenas a entrada Moonlight em cache associada ao IP desse HOST autenticado e aguarda a remoção antes de redescobrir. Na reconexão de uma sessão já pareada, conserva a identidade. Pareamento e abertura do desktop têm prazos e mensagens de erro; a consulta periódica não apaga mais o erro da conexão.
