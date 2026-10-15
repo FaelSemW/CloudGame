@@ -1,5 +1,10 @@
 # Installs the official network service. No shared enrollment credentials.
 $ErrorActionPreference = 'Stop'
+# A caller running PowerShell 7 can pass its module search path to Windows
+# PowerShell 5.1. Load the system modules from this interpreter explicitly.
+foreach ($moduleName in @('Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Security', 'Microsoft.PowerShell.Management')) {
+    Import-Module "$PSHOME\Modules\$moduleName\$moduleName.psd1" -Force -ErrorAction Stop
+}
 $programRoot = $env:ProgramW6432
 if (-not $programRoot) { $programRoot = $env:ProgramFiles }
 $cli = Join-Path $programRoot 'Tailscale\tailscale.exe'

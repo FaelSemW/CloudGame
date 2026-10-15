@@ -9,8 +9,6 @@ on:
       - 'tools/package_linux.py'
       - 'tools/source_bundle.py'
       - 'tools/smoke_windows.ps1'
-      - 'deploy/windows-client.iss'
-      - 'deploy/ensure-tailscale.ps1'
       - 'deploy/install_client_linux.py'
       - '.github/workflows/native-clients.yml'
 permissions:
